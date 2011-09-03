@@ -44,10 +44,12 @@
 
 namespace Phix_Project\TasksLib;
 
-class ETaskNotInitialised extends \Exception
+use Phix_Project\ExceptionsLib\E5xx_InternalServerErrorException;
+
+class E5xx_TaskNotInitialisedException extends E5xx_InternalServerErrorException
 {
         public function __construct($taskName)
         {
-                parent::__construct("Task $taskName has not been initialised; cannot execute", 500);
+                parent::__construct("Task '$taskName' has not been initialised; cannot execute");
         }
 }
