@@ -40,7 +40,7 @@ ${contents}
         <min>5.3.0</min>
       </php>
       <pearinstaller>
-        <min>1.9.3</min>
+        <min>1.9.4</min>
       </pearinstaller>
       <package>
         <name>Autoloader</name>
@@ -48,14 +48,20 @@ ${contents}
         <min>3.0.0</min>
 	      <max>3.999.9999</max>
       </package>
+      <package>
+        <name>ExceptionsLib</name>
+        <channel>pear.phix-project.org</channel>
+        <min>1.0.0</min>
+        <max>1.999.9999</max>
+      </package>
     </required>
   </dependencies>
   <phprelease />
   <changelog>
     <release>
       <version>
-        <release>X.Y.Z</release>
-        <api>X.Y</api>
+        <release>1.0.0</release>
+        <api>1</api>
       </version>
       <stability>
         <release>stable</release>
