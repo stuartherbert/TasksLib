@@ -44,10 +44,12 @@
 
 namespace Phix_Project\TasksLib;
 
-class ETaskFailed extends \Exception
+use Phix_Project\ExceptionsLib\E5xx_InternalServerErrorException;
+
+class E5xx_TaskFailedException extends E5xx_InternalServerErrorException
 {
         public function __construct($taskName, $problem, $cause = null)
         {
-                parent::__construct("Task $taskName failed: $problem", 500, $cause);
+                parent::__construct("Task '$taskName' failed: $problem", $cause);
         }
 }
