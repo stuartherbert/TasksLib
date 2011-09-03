@@ -51,7 +51,7 @@ ${contents}
       <package>
         <name>ExceptionsLib</name>
         <channel>pear.phix-project.org</channel>
-        <min>1.0.0</min>
+        <min>1.0.1</min>
         <max>1.999.9999</max>
       </package>
     </required>
