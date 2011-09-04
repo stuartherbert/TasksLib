@@ -64,7 +64,7 @@ class Files_MkdirTask extends TaskBase
         {
                 if ($this->targetFolder == null)
                 {
-                        throw new ETaskNotInitialised(__CLASS__);
+                        throw new E5xx_TaskNotInitialisedException(__CLASS__);
                 }
         }
         
@@ -78,7 +78,7 @@ class Files_MkdirTask extends TaskBase
         {
                 if (!\is_dir($this->targetFolder))
                 {
-                        throw new ETaskFailed(__CLASS__, "Folder creation failed");
+                        throw new E5xx_TaskFailedException(__CLASS__, "Folder creation failed");
                 }
         }
 }

@@ -44,7 +44,7 @@
 
 namespace Phix_Project\TasksLib;
 
-use Phix_Project\ExceptionsLib\LegacyErrorHandler;
+use Phix_Project\ExceptionsLib\Legacy_ErrorHandler;
 
 class TaskQueue
 {
@@ -70,12 +70,12 @@ class TaskQueue
         
         public function executeQueue($queueName = self::DEFAULT_QUEUE)
         {
-                $this->requireValidQueue($queueName);                
+                $this->requireValidQueue($queueName);
+                $wrapper = new Legacy_ErrorHandler();
                 
                 while (!$this->queues[$queueName]->isEmpty())
                 {
                         $task = $this->queues[$queueName]->dequeue();
-                        $wrapper = new LegacyErrorHandler();
                         $wrapped = function($task) { $task->execute(); };
                         $wrapper->run($wrapped($task));
                 }

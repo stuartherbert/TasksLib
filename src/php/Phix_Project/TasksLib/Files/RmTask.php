@@ -44,6 +44,8 @@
 
 namespace Phix_Project\TasksLib;
 
+use Phix_Project\ExceptionsLib\Legacy_ErrorHandler;
+
 class Files_RmdirTask extends TaskBase
 {
         /**
@@ -64,7 +66,7 @@ class Files_RmdirTask extends TaskBase
         {
                 if ($this->targetFolder == null)
                 {
-                        throw new ETaskNotInitialised(__CLASS__);
+                        throw new E5xx_TaskNotInitialisedException(__CLASS__);
                 }
         }
         
@@ -79,16 +81,21 @@ class Files_RmdirTask extends TaskBase
                 else
                 {
                         // we think we are removing a folder
-                        $this->recursiveRmdir($this->targetFolder);
+                        $handler = new Legacy_ErrorHandler();
+                        $this->recursiveRmdir($this->targetFolder, $handler);
                 }
         }
         
-        protected function recursiveRmdir($folder)
+        protected function recursiveRmdir($folder, Legacy_ErrorHandler $handler)
         {
-                $dir = \opendir($folder);
+                $wrapped = function($folder) {
+                        \opendir($folder);
+                };
+                
+                $dir = $handler->run($folder);
                 if (!$dir)
                 {
-                        throw new \Exception("unable to open folder " . $folder . ' for reading');
+                        throw new E5xx_TaskFailedException(__CLASS__, "unable to open folder " . $folder . ' for reading');
                 }
 
                 while (false !== ($entry = \readdir($dir)))
@@ -119,7 +126,7 @@ class Files_RmdirTask extends TaskBase
                 // does the folder still exist?
                 if (file_exists($this->targetFolder))
                 {
-                        throw new ETaskFailed(__CLASS__, $this->targetFolder . " exists after removal attempt");
+                        throw new E5xx_TaskFailedException(__CLASS__, $this->targetFolder . " exists after removal attempt");
                 }
         }
 }
