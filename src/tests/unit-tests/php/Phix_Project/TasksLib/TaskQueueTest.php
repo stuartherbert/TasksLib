@@ -58,7 +58,7 @@ class DummyTask extends TaskBase
                 $this->taskWillSucceed = $taskWillSucceed;
         }
         
-        protected function requireInitialisedTask()
+        public function requireInitialisedTask()
         {
                 if (!$this->initialised)
                 {
@@ -72,7 +72,7 @@ class DummyTask extends TaskBase
                 $this->taskPerformed = true;
         }
         
-        protected function requireSuccessfulTask()
+        public function requireSuccessfulTask()
         {
                 // this exception should never get thrown in testing
                 if (!$this->initialised)

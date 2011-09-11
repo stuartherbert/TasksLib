@@ -58,7 +58,7 @@ abstract class TaskBase
                 $this->requireSuccessfulTask();
         }
         
-        abstract protected function requireInitialisedTask();
+        abstract public function requireInitialisedTask();
         abstract protected function performTask();
-        abstract protected function requireSuccessfulTask();
+        abstract public function requireSuccessfulTask();
 }
