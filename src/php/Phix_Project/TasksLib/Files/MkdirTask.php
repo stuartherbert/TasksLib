@@ -60,7 +60,7 @@ class Files_MkdirTask extends TaskBase
                 $this->umask = $umask;
         }
         
-        protected function requireInitialisedTask()
+        public function requireInitialisedTask()
         {
                 if ($this->targetFolder == null)
                 {
@@ -74,7 +74,7 @@ class Files_MkdirTask extends TaskBase
                 \mkdir ($this->targetFolder, $this->umask, true);
         }
         
-        protected function requireSuccessfulTask()
+        public function requireSuccessfulTask()
         {
                 if (!\is_dir($this->targetFolder))
                 {
