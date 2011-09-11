@@ -46,7 +46,7 @@ namespace Phix_Project\TasksLib;
 
 use Phix_Project\ExceptionsLib\E5xx_InternalServerErrorException;
 
-class E5xx_NoSuchQueueExceptionTest extends \PHPUnit_Framework_TestCase
+class E5xx_NotAValidTaskExceptionTest extends \PHPUnit_Framework_TestCase
 {
         public function testCanThrowAsException()
         {
@@ -56,9 +56,9 @@ class E5xx_NoSuchQueueExceptionTest extends \PHPUnit_Framework_TestCase
                 // action
                 try
                 {
-                        throw new E5xx_NoSuchQueueException("default");
+                        throw new E5xx_NotAValidTaskException("default");
                 }
-                catch (E5xx_NoSuchQueueException $e)
+                catch (E5xx_NotAValidTaskException $e)
                 {
                         $caughtException = true;
                 }
@@ -76,9 +76,9 @@ class E5xx_NoSuchQueueExceptionTest extends \PHPUnit_Framework_TestCase
                 // action
                 try
                 {
-                        throw new E5xx_NoSuchQueueException("default");
+                        throw new E5xx_NotAValidTaskException("default");
                 }
-                catch (E5xx_NoSuchQueueException $e)
+                catch (E5xx_NotAValidTaskException $e)
                 {
                         $caughtException = true;
                         $caughtCode      = $e->getCode();
@@ -97,11 +97,11 @@ class E5xx_NoSuchQueueExceptionTest extends \PHPUnit_Framework_TestCase
                 // action
                 try
                 {
-                        throw new E5xx_NoSuchQueueException("default");
+                        throw new E5xx_NotAValidTaskException("default");
                 }
                 catch (E5xx_InternalServerErrorException $e)
                 {
-                        if ($e instanceof E5xx_NoSuchQueueException)
+                        if ($e instanceof E5xx_NotAValidTaskException)
                         {
                                 $caughtException = true;
                         }
@@ -116,14 +116,14 @@ class E5xx_NoSuchQueueExceptionTest extends \PHPUnit_Framework_TestCase
                 // setup
                 $caughtException = false;
                 $caughtMessage   = null;
-                $expectedMessage = "Task queue 'default' does not exist";
+                $expectedMessage = "Object of type 'default' is not a valid task";
                 
                 // action
                 try
                 {
-                        throw new E5xx_NoSuchQueueException("default");
+                        throw new E5xx_NotAValidTaskException("default");
                 }
-                catch (E5xx_NoSuchQueueException $e)
+                catch (E5xx_NotAValidTaskException $e)
                 {
                         $caughtException = true;
                         $caughtMessage   = $e->getMessage();

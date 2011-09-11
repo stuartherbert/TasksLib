@@ -46,10 +46,10 @@ namespace Phix_Project\TasksLib;
 
 use Phix_Project\ExceptionsLib\E5xx_InternalServerErrorException;
 
-class E5xx_NoSuchQueueException extends E5xx_InternalServerErrorException
+class E5xx_NotAValidTaskException extends E5xx_InternalServerErrorException
 {
-        public function __construct($queueName)
+        public function __construct($class)
         {
-                parent::__construct("Task queue '$queueName' does not exist");
+                parent::__construct("Object of type '$class' is not a valid task");
         }
 }
