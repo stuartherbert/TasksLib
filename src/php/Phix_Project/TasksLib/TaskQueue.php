@@ -46,43 +46,32 @@ namespace Phix_Project\TasksLib;
 
 use Phix_Project\ExceptionsLib\Legacy_ErrorHandler;
 
-class TaskQueue
+class TaskQueue extends \SplQueue
 {
-        const DEFAULT_QUEUE = "__default";
-        
-        private $queues = array();
-        
-        public function __construct()
+        public function enqueue($obj)
         {
-                $this->newQueue(self::DEFAULT_QUEUE);
-        }
-        
-        public function newQueue($queueName)
-        {
-                $this->queues[$queueName] = new \SplQueue();
-        }
-        
-        public function queueTask(TaskBase $task, $queueName = self::DEFAULT_QUEUE)
-        {
-                $this->requireValidQueue($queueName);
-                $this->queues[$queueName]->enqueue($task);
-        }
-        
-        public function executeQueue($queueName = self::DEFAULT_QUEUE)
-        {
-                $this->requireValidQueue($queueName);
-                $wrapper = new Legacy_ErrorHandler();
-                
-                while (!$this->queues[$queueName]->isEmpty())
+                if (!$obj instanceof TaskBase)
                 {
-                        $task = $this->queues[$queueName]->dequeue();
-                        $wrapped = function($task) { $task->execute(); };
-                        $wrapper->run($wrapped($task));
+                        throw new E5xx_NotAValidTaskException(get_class($obj));
                 }
+                
+                $this->queueTask($obj);
         }
         
-        public function emptyQueue($queueName = self::DEFAULT_QUEUE)
+        public function queueTask(TaskBase $task)
         {
-                $this->newQueue($queueName);
+                parent::enqueue($task);
         }
+        
+        public function executeTasks()
+        {
+                $wrapper = new Legacy_ErrorHandler();
+                $wrapped = function($task) { return $task->executeTask(); };
+                
+                while (!$this->isEmpty())
+                {
+                        $task = $this->dequeue();
+                        $wrapper->run($wrapped, array($task));
+                }
+        }        
 }
