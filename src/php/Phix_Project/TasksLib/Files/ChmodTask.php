@@ -47,17 +47,17 @@ namespace Phix_Project\TasksLib;
 class Files_ChmodTask extends TaskBase
 {
         protected $file = null;
-        protected $mask = null;
+        protected $mode = null;
         
-        public function initWithFileAndMask($file, $mask)
+        public function initWithFileAndMode($file, $mode)
         {
                 $this->file = $file;
-                $this->mask = $mask;
+                $this->mode = $mode;
         }
         
-        protected function requireInitialisedTask()
+        public function requireInitialisedTask()
         {
-                if ($this->file == null || $this->mask == null)
+                if ($this->file == null || $this->mode == null)
                 {
                         throw new E5xx_TaskNotInitialisedException(__CLASS__);
                 }
@@ -68,15 +68,17 @@ class Files_ChmodTask extends TaskBase
                 // no need to check the return code, because TaskQueue
                 // will detect any PHP errors thrown, and turn them
                 // into exceptions
-                \chmod($this->file, $this->mask);
+                \chmod($this->file, $this->mode);
         }
         
-        protected function requireSuccessfulTask()
+        public function requireSuccessfulTask()
         {
                 // did the permissions change?
-                if (\fileperms($this->file) !== $this->mask)
+                if ((\fileperms($this->file) & 0777) !== $this->mode)
                 {
+                        // @codeCoverageIgnoreStart
                         throw new E5xx_TaskFailedException(__CLASS__, $this->file . " permissions could not be changed to " . $this->mask);
+                        // @codeCoverageIgnoreEnd
                 }
         }
 }
