@@ -163,7 +163,6 @@ class MkdirTaskTest extends \PHPUnit_Framework_TestCase
                 
                 // check
                 $this->assertTrue(is_dir($folderToMake));
-                echo sprintf('%o', (fileperms($folderToMake) & 0777));
                 $this->assertEquals($targetUmask, (fileperms($folderToMake) & 0777));
                 
                 // remove the folder we've just made
