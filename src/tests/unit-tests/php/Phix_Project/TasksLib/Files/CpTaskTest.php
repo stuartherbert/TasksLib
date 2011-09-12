@@ -86,34 +86,157 @@ class Files_CpTaskTest extends \PHPUnit_Framework_TestCase
                 $this->assertTrue($caughtException);
         }
         
-        /*
-        public function testCanSetModeOnFiles()
+        public function testCanCopyFilesToNewFilename()
         {
                 // setup
-                $fileToChange = "/tmp/chmodtasktest";
-                $targetMode   = 0755;
-                if (!file_exists($fileToChange))
+                $fileToCopy = "/tmp/cptasktest";
+                if (!file_exists($fileToCopy))
                 {
-                        file_put_contents($fileToChange, '');
+                        file_put_contents($fileToCopy, '');
                 }
-                chmod($fileToChange, 0644);
+                $fileToCopyTo = '/tmp/cptasktest2';
+                if (file_exists($fileToCopyTo))
+                {
+                        unlink($fileToCopyTo);
+                }
                 
                 $queue = new TaskQueue();
-                $task  = new Files_ChmodTask();                
-                $task->initWithFileAndMode($fileToChange, $targetMode);
+                $task  = new Files_CpTask();                
+                $task->initWithFilesOrFolders($fileToCopy, $fileToCopyTo);
                 $queue->queueTask($task);
                 
-                $this->assertTrue(file_exists($fileToChange));
+                $this->assertTrue(file_exists($fileToCopy));
+                $this->assertFalse(file_exists($fileToCopyTo));
                 
                 // action
                 $queue->executeTasks();
                 
                 // check
-                $this->assertEquals(0100755, fileperms($fileToChange));
+                $this->assertTrue(file_exists($fileToCopyTo));
                 
                 // clean up after ourselves
-                \unlink($fileToChange);
+                unlink($fileToCopy);
+                unlink($fileToCopyTo);
         }
-         * 
-         */
+
+        public function testCanCopyFilesIntoFolder()
+        {
+                // setup
+                $fileToCopy = "/tmp/cptasktest";
+                if (!file_exists($fileToCopy))
+                {
+                        file_put_contents($fileToCopy, '');
+                }
+                
+                $dirToCopyTo = '/tmp/cptasktestdir';
+                if (!is_dir($dirToCopyTo))
+                {
+                        mkdir($dirToCopyTo);
+                }
+                
+                $fileToCopyTo = $dirToCopyTo . '/cptasktest';
+                if (file_exists($fileToCopyTo))
+                {
+                        unlink($fileToCopyTo);
+                }
+                
+                $queue = new TaskQueue();
+                $task  = new Files_CpTask();                
+                $task->initWithFilesOrFolders($fileToCopy, $dirToCopyTo);
+                $queue->queueTask($task);
+                
+                $this->assertTrue(file_exists($fileToCopy));
+                $this->assertFalse(file_exists($fileToCopyTo));
+                
+                // action
+                $queue->executeTasks();
+                
+                // check
+                $this->assertTrue(file_exists($fileToCopyTo));
+                
+                // clean up after ourselves
+                unlink($fileToCopy);
+                unlink($fileToCopyTo);
+                rmdir($dirToCopyTo);
+        }
+        
+        public function testCanCopyFolders()
+        {
+                // setup
+                $baseCopyFromDir = '/tmp/cptasktest-from';
+                $this->createFolder($baseCopyFromDir);
+                
+                $baseCopyToDir = '/tmp/cptasktest-to';
+                $this->createFolder($baseCopyToDir);
+                
+                $files = array (
+                    '1.txt',
+                    '1/2.txt',
+                    '2/3.txt',
+                    '3/4.txt',
+                    '3/4/5.txt'
+                );
+                
+                foreach ($files as $filename)
+                {
+                        $this->createFile($baseCopyFromDir . '/' . $filename);
+                        $this->assertTrue(!file_exists($baseCopyToDir . '/' . $filename));
+                }
+                
+                $queue = new TaskQueue();
+                $task  = new Files_CpTask();                
+                $task->initWithFilesOrFolders($baseCopyFromDir, $baseCopyToDir);
+                $queue->queueTask($task);
+                
+                // action
+                $queue->executeTasks();
+                
+                // check
+                foreach ($files as $filename)
+                {
+                        $this->assertTrue(file_exists($baseCopyToDir . '/' . $filename));
+                        unlink($baseCopyFromDir . '/' . $filename);
+                        unlink($baseCopyToDir . '/' . $filename);
+                }
+                
+                // clean up after ourselves
+                foreach (array_reverse($files) as $filename)
+                {
+                        $dir = dirname($baseCopyFromDir . '/' . $filename);
+                        rmdir($dir);
+                        
+                        $dir = dirname($baseCopyToDir . '/' . $filename);
+                        rmdir($dir);
+                }
+        }
+        
+        // helper functions
+        
+        protected function createFile($filename)
+        {
+                $now = time();
+                
+                if (!is_dir(dirname($filename)))
+                {
+                        $this->createFolder(dirname($filename));
+                }
+                file_put_contents($filename, $now);
+                
+                return $now;
+        }
+        
+        protected function createFolder($folder)
+        {
+                $parts = explode('/', $folder);
+                
+                $folderToMake = '';
+                foreach ($parts as $part)
+                {
+                        $folderToMake .= '/' . $part;
+                        if (!is_dir($folderToMake))
+                        {
+                                mkdir($folderToMake);
+                        }
+                }
+        }
 }

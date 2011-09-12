@@ -65,7 +65,7 @@ class Files_CpTask extends TaskBase
         
         protected function performTask()
         {
-                if (!is_dir($this->src))
+                if (!\is_dir($this->src))
                 {
                         $this->copyFile($this->src, $this->dest);
                 }
@@ -73,6 +73,21 @@ class Files_CpTask extends TaskBase
                 {
                         $this->recursiveCopyFolders($this->src, $this->dest);
                 }
+        }
+        
+        protected function copyFile($src, $dest)
+        {
+                // make sure $dest is a filename
+                if (is_dir($dest))
+                {
+                        $dest = $dest . DIRECTORY_SEPARATOR . basename($src);
+                }
+                
+                // copy the file
+                copy($src, $dest);
+
+                // set the mode to match
+                chmod($dest, fileperms($src) & 0777);
         }
 
         protected function recursiveCopyFolders($src, $dest)
@@ -85,7 +100,9 @@ class Files_CpTask extends TaskBase
                 $dir = \opendir($src);
                 if (!$dir)
                 {
+                        // @codeCoverageIgnoreStart
                         throw new \Exception('unable to open folder ' . $src . ' for reading');
+                        // @codeCoverageIgnoreEnd
                 }
                 
                 while (false !== ($entry = \readdir($dir)))
@@ -100,7 +117,7 @@ class Files_CpTask extends TaskBase
 
                         if (\is_file($srcEntry))
                         {
-                                \copy($srcEntry, $dstEntry);
+                                $this->copyFile($srcEntry, $dstEntry);
                         }
                         else if (\is_dir($srcEntry))
                         {
