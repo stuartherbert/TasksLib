@@ -46,7 +46,7 @@ namespace Phix_Project\TasksLib;
 
 use Phix_Project\ExceptionsLib\Legacy_ErrorHandler;
 
-class Files_RmdirTask extends TaskBase
+class Files_RmTask extends TaskBase
 {
         /**
          * The folder that we want to remove
@@ -62,7 +62,7 @@ class Files_RmdirTask extends TaskBase
                 return $this;
         }
         
-        protected function requireInitialisedTask()
+        public function requireInitialisedTask()
         {
                 if ($this->targetFolder == null)
                 {
@@ -121,7 +121,7 @@ class Files_RmdirTask extends TaskBase
                 \rmdir($folder);                
         }
         
-        protected function requireSuccessfulTask()
+        public function requireSuccessfulTask()
         {
                 // does the folder still exist?
                 if (file_exists($this->targetFolder))
