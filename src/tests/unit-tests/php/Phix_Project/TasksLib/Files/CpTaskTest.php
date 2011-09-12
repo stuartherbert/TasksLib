@@ -44,75 +44,76 @@
 
 namespace Phix_Project\TasksLib;
 
-class Files_CpTask extends TaskBase
+class Files_CpTaskTest extends \PHPUnit_Framework_TestCase
 {
-        protected $src = null;
-        protected $dest = null;
-        
-        public function initWithFilesOrFolders($src, $dest)
+        public function testCanInstantiate()
         {
-                $this->src  = $src;
-                $this->dest = $dest;
+                $task = new Files_CpTask();
+                $this->assertTrue($task instanceof Files_CpTask);
+                $this->assertTrue($task instanceof TaskBase);
         }
         
-        public function requireInitialisedTask()
+        public function testCanInitialise()
         {
-                if ($this->src == null || $this->dest == null)
-                {
-                        throw new E5xx_TaskNotInitialisedException(__CLASS__);
-                }
+                $task = new Files_CpTask();
+                $task->initWithFilesOrFolders('/tmp/cptasktest', '/tmp/cptasktestdest');
+                $task->requireInitialisedTask();
+                
+                // if we get here, the previous method call did not throw
+                // an exception
+                $this->assertTrue(true);
         }
         
-        protected function performTask()
+        public function testThrowsExceptionIfNotInitialised()
         {
-                if (!is_dir($this->src))
+                // setup
+                $queue = new TaskQueue();
+                $task = new Files_CpTask();
+                $queue->queueTask($task);
+                
+                // action
+                $caughtException = false;
+                try
                 {
-                        $this->copyFile($this->src, $this->dest);
+                        $queue->executeTasks();
                 }
-                else
+                catch (E5xx_TaskNotInitialisedException $e)
                 {
-                        $this->recursiveCopyFolders($this->src, $this->dest);
-                }
-        }
-
-        protected function recursiveCopyFolders($src, $dest)
-        {
-                if (!\is_dir($dest))
-                {
-                        \mkdir($dest);
-                }
-
-                $dir = \opendir($src);
-                if (!$dir)
-                {
-                        throw new \Exception('unable to open folder ' . $src . ' for reading');
+                        $caughtException = true;
                 }
                 
-                while (false !== ($entry = \readdir($dir)))
-                {
-                        if ($entry == '.' || $entry == '..')
-                        {
-                                continue;
-                        }
-
-                        $srcEntry = $src . DIRECTORY_SEPARATOR . $entry;
-                        $dstEntry = $dest . DIRECTORY_SEPARATOR . $entry;
-
-                        if (\is_file($srcEntry))
-                        {
-                                \copy($srcEntry, $dstEntry);
-                        }
-                        else if (\is_dir($srcEntry))
-                        {
-                                $this->recursiveCopyFolders($srcEntry, $dstEntry);
-                        }
-                }
-                \closedir($dir);
-        }        
-        
-        public function requireSuccessfulTask()
-        {
-                // does the destination exist?
-                
+                // check
+                $this->assertTrue($caughtException);
         }
+        
+        /*
+        public function testCanSetModeOnFiles()
+        {
+                // setup
+                $fileToChange = "/tmp/chmodtasktest";
+                $targetMode   = 0755;
+                if (!file_exists($fileToChange))
+                {
+                        file_put_contents($fileToChange, '');
+                }
+                chmod($fileToChange, 0644);
+                
+                $queue = new TaskQueue();
+                $task  = new Files_ChmodTask();                
+                $task->initWithFileAndMode($fileToChange, $targetMode);
+                $queue->queueTask($task);
+                
+                $this->assertTrue(file_exists($fileToChange));
+                
+                // action
+                $queue->executeTasks();
+                
+                // check
+                $this->assertEquals(0100755, fileperms($fileToChange));
+                
+                // clean up after ourselves
+                \unlink($fileToChange);
+        }
+         * 
+         */
 }
