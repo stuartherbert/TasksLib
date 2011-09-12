@@ -44,7 +44,7 @@
 
 namespace Phix_Project\TasksLib;
 
-class MkdirTaskTest extends \PHPUnit_Framework_TestCase
+class Files_MkdirTaskTest extends \PHPUnit_Framework_TestCase
 {
         public function testCanInstantiate()
         {
