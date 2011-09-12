@@ -53,10 +53,9 @@ class Files_RmTaskTest extends \PHPUnit_Framework_TestCase
                 $this->assertTrue($task instanceof TaskBase);
         }
         
-        /*
         public function testCanInitialise()
         {
-                $task = new Files_MkdirTask();
+                $task = new Files_RmTask();
                 $task->initWithFolder('/tmp/mkdirtasktest');
                 $task->requireInitialisedTask();
                 
@@ -69,7 +68,7 @@ class Files_RmTaskTest extends \PHPUnit_Framework_TestCase
         {
                 // setup
                 $queue = new TaskQueue();
-                $task = new Files_MkdirTask();
+                $task = new Files_RmTask();
                 $queue->queueTask($task);
                 
                 // action
@@ -87,87 +86,130 @@ class Files_RmTaskTest extends \PHPUnit_Framework_TestCase
                 $this->assertTrue($caughtException);
         }
         
-        public function testCanCreateNewFolders()
+        public function testCanDeleteFiles()
         {
                 // setup
-                $folderToMake = "/tmp/mkdirtasktest";
+                $fileToRemove = "/tmp/rmktasktest";
+                if (!file_exists($fileToRemove))
+                {
+                        file_put_contents($fileToRemove, '');
+                }
                 
                 $queue = new TaskQueue();
-                $task  = new Files_MkdirTask();                
-                $task->initWithFolder($folderToMake);
+                $task  = new Files_RmTask();                
+                $task->initWithFile($fileToRemove);
                 $queue->queueTask($task);
                 
-                if (is_dir($folderToMake))
-                {
-                        rmdir($folderToMake);
-                }
-                $this->assertFalse(is_dir($folderToMake));
+                $this->assertTrue(file_exists($fileToRemove));
                 
                 // action
                 $queue->executeTasks();
                 
                 // check
-                $this->assertTrue(is_dir($folderToMake));
-                // remove the folder we've just made
-                rmdir($folderToMake);
+                $this->assertFalse(file_exists($fileToRemove));
         }
+        
+        public function testCanDeleteEmptyFolders()
+        {
+                // setup
+                $folderToRemove = "/tmp/rmktasktest";
+                if (!is_dir($folderToRemove))
+                {
+                        mkdir($folderToRemove);
+                }
+                
+                $queue = new TaskQueue();
+                $task  = new Files_RmTask();                
+                $task->initWithFile($folderToRemove);
+                $queue->queueTask($task);
+                
+                $this->assertTrue(is_dir($folderToRemove));
+                
+                // action
+                $queue->executeTasks();
+                
+                // check
+                $this->assertFalse(is_dir($folderToRemove));                
+        }
+        
+        public function testCanDeleteNestedFolders()
+        {
+                // setup
+                $foldersToRemove = array(
+                    '/tmp/rmtasktest',
+                    '/tmp/rmtasktest/1',
+                    '/tmp/rmtasktest/1/2'
+                );
 
-        public function testCanCreateNestedFolders()
-        {
-                // setup
-                $folderToMake = "/tmp/mkdirtasktest/1/2/3";
+                foreach ($foldersToRemove as $folderToRemove)
+                {
+                        if (!is_dir($folderToRemove))
+                        {
+                                mkdir($folderToRemove);
+                        }
+                        
+                        $this->assertTrue(is_dir($folderToRemove));
+                }
                 
                 $queue = new TaskQueue();
-                $task  = new Files_MkdirTask();                
-                $task->initWithFolder($folderToMake);
+                $task  = new Files_RmTask();                
+                $task->initWithFile($foldersToRemove[0]);
                 $queue->queueTask($task);
-                
-                if (is_dir($folderToMake))
-                {
-                        rmdir($folderToMake);
-                }
-                $this->assertFalse(is_dir($folderToMake));
-                $this->assertFalse(is_dir(dirname($folderToMake)));
                 
                 // action
                 $queue->executeTasks();
                 
                 // check
-                $this->assertTrue(is_dir($folderToMake));
-                // remove the folder we've just made
-                rmdir($folderToMake);
-                rmdir('/tmp/mkdirtasktest/1/2');
-                rmdir('/tmp/mkdirtasktest/1');
-                rmdir('/tmp/mkdirtasktest');
-                $this->assertTrue(!is_dir('/tmp/mkdirtasktest'));
+                $this->assertFalse(is_dir($foldersToRemove[0]));                
         }
+        
+        public function testCanDeleteFoldersAndTheirContents()
+        {
+                // setup
+                $foldersToRemove = array (
+                    '/tmp/rmtasktest',
+                    '/tmp/rmtasktest/1',
+                    '/tmp/rmtasktest/1/2'
+                );
 
-        public function testCanCreateNewFoldersWithGivenUmask()
-        {
-                // setup
-                $folderToMake = "/tmp/mkdirtasktest";
-                $targetUmask  = 0755;
+                $filesToRemove = array (
+                    '/tmp/rmtasktest/dummy.txt',
+                    '/tmp/rmtasktest/1/dummy.txt',
+                    '/tmp/rmtasktest/1/2/dummy.txt'
+                );
+                
+                foreach ($foldersToRemove as $folderToRemove)
+                {
+                        if (!is_dir($folderToRemove))
+                        {
+                                mkdir($folderToRemove);
+                        }
+                        
+                        $this->assertTrue(is_dir($folderToRemove));
+                }
+                
+                foreach ($filesToRemove as $fileToRemove)
+                {
+                        if (!file_exists($fileToRemove))
+                        {
+                                file_put_contents($fileToRemove, '');
+                        }
+                }
                 
                 $queue = new TaskQueue();
-                $task  = new Files_MkdirTask();                
-                $task->initWithFolderAndUmask($folderToMake, $targetUmask);
+                $task  = new Files_RmTask();                
+                $task->initWithFile($foldersToRemove[0]);
                 $queue->queueTask($task);
-                
-                if (is_dir($folderToMake))
-                {
-                        rmdir($folderToMake);
-                }
-                $this->assertFalse(is_dir($folderToMake));
                 
                 // action
                 $queue->executeTasks();
                 
                 // check
-                $this->assertTrue(is_dir($folderToMake));
-                $this->assertEquals($targetUmask, (fileperms($folderToMake) & 0777));
+                $this->assertFalse(is_dir($foldersToRemove[0]));
                 
-                // remove the folder we've just made
-                rmdir($folderToMake);
-        }
-        */
+                foreach ($filesToRemove as $fileToRemove)
+                {
+                        $this->assertFalse(file_exists($fileToRemove));
+                }
+        }        
 }

@@ -51,51 +51,53 @@ class Files_RmTask extends TaskBase
         /**
          * The folder that we want to remove
          * 
-         * @var string - path to folder to remove
+         * @var string - path to folder or file to remove
          */
-        protected $targetFolder = null;
+        protected $target = null;
         
         public function initWithFolder($folder)
         {
-                $target = \realpath($folder);
-                
+                $this->target = $folder;                
+                return $this;
+        }
+        
+        public function initWithFile($filename)
+        {
+                $this->target = $filename;
                 return $this;
         }
         
         public function requireInitialisedTask()
         {
-                if ($this->targetFolder == null)
+                if ($this->target == null)
                 {
                         throw new E5xx_TaskNotInitialisedException(__CLASS__);
                 }
         }
         
         protected function performTask()
-        {
+        {                
                 // are we removing a file or a folder?
-                if (!is_dir($this->targetFolder))
+                if (!is_dir($this->target))
                 {
                         // we think we are removing a file
-                        \unlink($this->targetFolder);
+                        \unlink($this->target);
                 }
                 else
                 {
                         // we think we are removing a folder
-                        $handler = new Legacy_ErrorHandler();
-                        $this->recursiveRmdir($this->targetFolder, $handler);
+                        $this->recursiveRmdir($this->target);
                 }
         }
         
-        protected function recursiveRmdir($folder, Legacy_ErrorHandler $handler)
+        protected function recursiveRmdir($folder)
         {
-                $wrapped = function($folder) {
-                        \opendir($folder);
-                };
-                
-                $dir = $handler->run($folder);
+                $dir = \opendir($folder);
                 if (!$dir)
                 {
+                        // @codeCoverageIgnoreStart
                         throw new E5xx_TaskFailedException(__CLASS__, "unable to open folder " . $folder . ' for reading');
+                        // @codeCoverageIgnoreEnd
                 }
 
                 while (false !== ($entry = \readdir($dir)))
@@ -124,9 +126,11 @@ class Files_RmTask extends TaskBase
         public function requireSuccessfulTask()
         {
                 // does the folder still exist?
-                if (file_exists($this->targetFolder))
+                if (file_exists($this->target))
                 {
-                        throw new E5xx_TaskFailedException(__CLASS__, $this->targetFolder . " exists after removal attempt");
+                        // @codeCoverageIgnoreStart
+                        throw new E5xx_TaskFailedException(__CLASS__, $this->target . " exists after removal attempt");
+                        // @codeCoverageIgnoreEnd
                 }
         }
 }
