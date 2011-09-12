@@ -76,9 +76,15 @@ class Files_MkdirTask extends TaskBase
         
         public function requireSuccessfulTask()
         {
+                // it is difficult to imagine the circumstances in which
+                // mkdir() does not throw an error, and also fails to
+                // create the folder we want
+                
                 if (!\is_dir($this->targetFolder))
                 {
+                        // @codeCoverageIgnoreStart
                         throw new E5xx_TaskFailedException(__CLASS__, "Folder creation failed");
+                        // @codeCoverageIgnoreEnd
                 }
         }
 }
