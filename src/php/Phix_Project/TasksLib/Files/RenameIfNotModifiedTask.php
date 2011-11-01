@@ -52,9 +52,9 @@ class Files_RenameIfNotModifiedTask extends TaskBase
         
         public function initWithFileAndChecksum($oldName, $newName, $md5sum)
         {
-                $this->oldName = $oldName;
-                $this->newName = $newName;
-                $this->md5sum  = $md5sum;
+                $this->oldName   = $oldName;
+                $this->newName   = $newName;
+                $this->oldMd5sum = $md5sum;
         }
         
         public function requireInitialisedTask()
