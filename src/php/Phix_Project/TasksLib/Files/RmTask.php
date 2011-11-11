@@ -50,23 +50,29 @@ class Files_RmTask extends TaskBase
 {
         /**
          * The folder that we want to remove
-         * 
+         *
          * @var string - path to folder or file to remove
          */
         protected $target = null;
-        
+
         public function initWithFolder($folder)
         {
-                $this->target = $folder;                
+                $this->target = $folder;
                 return $this;
         }
-        
+
+        public function initWithFolders($folders)
+        {
+                $this->target = $folders;
+                return $this;
+        }
+
         public function initWithFile($filename)
         {
                 $this->target = $filename;
                 return $this;
         }
-        
+
         public function requireInitialisedTask()
         {
                 if ($this->target == null)
@@ -74,22 +80,37 @@ class Files_RmTask extends TaskBase
                         throw new E5xx_TaskNotInitialisedException(__CLASS__);
                 }
         }
-        
+
         protected function performTask()
-        {                
+        {
+                if (is_array($this->target))
+                {
+                        foreach ($this->target as $target)
+                        {
+                                $this->removeTarget($target);
+                        }
+                }
+                else
+                {
+                        $this->removeTarget($this->target);
+                }
+        }
+
+        protected function removeTarget($target)
+        {
                 // are we removing a file or a folder?
-                if (!is_dir($this->target))
+                if (!is_dir($target))
                 {
                         // we think we are removing a file
-                        \unlink($this->target);
+                        \unlink($target);
                 }
                 else
                 {
                         // we think we are removing a folder
-                        $this->recursiveRmdir($this->target);
+                        $this->recursiveRmdir($target);
                 }
         }
-        
+
         protected function recursiveRmdir($folder)
         {
                 $dir = \opendir($folder);
@@ -120,9 +141,9 @@ class Files_RmTask extends TaskBase
 
                 \closedir($dir);
 
-                \rmdir($folder);                
+                \rmdir($folder);
         }
-        
+
         public function requireSuccessfulTask()
         {
                 // does the folder still exist?
