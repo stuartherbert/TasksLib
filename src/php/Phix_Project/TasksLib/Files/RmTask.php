@@ -153,12 +153,34 @@ class Files_RmTask extends TaskBase
 
         public function requireSuccessfulTask()
         {
-                // does the folder still exist?
-                if (file_exists($this->target))
+                if (is_array($this->target))
                 {
-                        // @codeCoverageIgnoreStart
-                        throw new E5xx_TaskFailedException(__CLASS__, $this->target . " exists after removal attempt");
-                        // @codeCoverageIgnoreEnd
+                        $failedList = null;
+                        foreach ($this->target as $target)
+                        {
+                                if (file_exists($target))
+                                {
+                                        $failedList[] = $target;
+                                }
+                        }
+
+                        if ($failedList !== null)
+                        {
+                                // @codeCoverageIgnoreStart
+                                throw new E5xx_TaskFailedException(__CLASS__, 'files/folders ' . implode(',', $failedList) . " exist after removal attempt");
+                                // @codeCoverageIgnoreEnd
+                        }
+                }
+                else
+                {
+                        // does the folder still exist?
+
+                        if (file_exists($this->target))
+                        {
+                                // @codeCoverageIgnoreStart
+                                throw new E5xx_TaskFailedException(__CLASS__, $this->target . " exists after removal attempt");
+                                // @codeCoverageIgnoreEnd
+                        }
                 }
         }
 }
