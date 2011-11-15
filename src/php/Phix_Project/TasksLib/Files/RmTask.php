@@ -98,6 +98,13 @@ class Files_RmTask extends TaskBase
 
         protected function removeTarget($target)
         {
+                // does our target exist at all?
+                if (!file_exists($target))
+                {
+                        // no it does not ...
+                        return;
+                }
+
                 // are we removing a file or a folder?
                 if (!is_dir($target))
                 {
