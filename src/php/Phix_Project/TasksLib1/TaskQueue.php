@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2011 Stuart Herbert.
+ * Copyright (c) 2011-present Stuart Herbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,57 +34,45 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib
+ * @subpackage  TasksLib1
  * @author      Stuart Herbert <stuart@stuartherbert.com>
- * @copyright   2011 Stuart Herbert
+ * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib;
+namespace Phix_Project\TasksLib1;
 
-class Files_MkdirTask extends TaskBase
+use SplQueue;
+use Phix_Project\ExceptionsLib\Legacy_ErrorHandler;
+
+class TaskQueue extends SplQueue
 {
-        protected $targetFolder = null;
-        protected $umask = 0755;
-        
-        public function initWithFolder($folder)
+        public function enqueue($obj)
         {
-                $this->targetFolder = $folder;
-        }
-        
-        public function initWithFolderAndUmask($folder, $umask)
-        {
-                $this->targetFolder = $folder;
-                $this->umask = $umask;
-        }
-        
-        public function requireInitialisedTask()
-        {
-                if ($this->targetFolder == null)
+                if (!$obj instanceof TaskBase)
                 {
-                        throw new E5xx_TaskNotInitialisedException(__CLASS__);
+                        throw new E5xx_NotAValidTaskException(get_class($obj));
                 }
+
+                $this->queueTask($obj);
         }
-        
-        protected function performTask()
+
+        public function queueTask(TaskBase $task)
         {
-                // create the folder
-                \mkdir ($this->targetFolder, $this->umask, true);
+                parent::enqueue($task);
         }
-        
-        public function requireSuccessfulTask()
+
+        public function executeTasks()
         {
-                // it is difficult to imagine the circumstances in which
-                // mkdir() does not throw an error, and also fails to
-                // create the folder we want
-                
-                if (!\is_dir($this->targetFolder))
+                $wrapper = new Legacy_ErrorHandler();
+                $wrapped = function($task) { return $task->executeTask(); };
+
+                while (!$this->isEmpty())
                 {
-                        // @codeCoverageIgnoreStart
-                        throw new E5xx_TaskFailedException(__CLASS__, "Folder creation failed");
-                        // @codeCoverageIgnoreEnd
+                        $task = $this->dequeue();
+                        $wrapper->run($wrapped, array($task));
                 }
         }
 }

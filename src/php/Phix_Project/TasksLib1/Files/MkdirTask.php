@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2011 Stuart Herbert.
+ * Copyright (c) 2011-present Stuart Herbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,51 +34,57 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib
+ * @subpackage  TasksLib1
  * @author      Stuart Herbert <stuart@stuartherbert.com>
- * @copyright   2011 Stuart Herbert
+ * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib;
+namespace Phix_Project\TasksLib1;
 
-class Files_RegexTask extends TaskBase
+class Files_MkdirTask extends TaskBase
 {
-        protected $file = null;
-        protected $regex = null;
-        protected $replace = null;
-        
-        public function initWithFileAndRegex($file, $regex, $replace)
+        protected $targetFolder = null;
+        protected $umask = 0755;
+
+        public function initWithFolder($folder)
         {
-                $this->file = $file;
-                $this->regex = $regex;
-                $this->replace = $replace;
+                $this->targetFolder = $folder;
         }
-        
+
+        public function initWithFolderAndUmask($folder, $umask)
+        {
+                $this->targetFolder = $folder;
+                $this->umask = $umask;
+        }
+
         public function requireInitialisedTask()
         {
-                if ($this->file == null || $this->regex == null || $this->replace == null)
+                if ($this->targetFolder == null)
                 {
                         throw new E5xx_TaskNotInitialisedException(__CLASS__);
                 }
         }
-        
+
         protected function performTask()
         {
-                // no need to check the return code, because TaskQueue
-                // will detect any PHP errors thrown, and turn them
-                // into exceptions
-                $haystack = file_get_contents($this->file);
-                $haystack = preg_replace($this->regex, $this->replace, $haystack);
-                file_put_contents($this->file, $haystack);
+                // create the folder
+                \mkdir ($this->targetFolder, $this->umask, true);
         }
-        
+
         public function requireSuccessfulTask()
         {
-                // this is impossible to test, because there are no
-                // guarantees that the regex was supposed to match
-                // anything in the first place!!
+                // it is difficult to imagine the circumstances in which
+                // mkdir() does not throw an error, and also fails to
+                // create the folder we want
+
+                if (!\is_dir($this->targetFolder))
+                {
+                        // @codeCoverageIgnoreStart
+                        throw new E5xx_TaskFailedException(__CLASS__, "Folder creation failed");
+                        // @codeCoverageIgnoreEnd
+                }
         }
 }

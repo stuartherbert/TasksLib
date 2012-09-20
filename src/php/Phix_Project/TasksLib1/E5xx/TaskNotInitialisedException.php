@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2011 Stuart Herbert.
+ * Copyright (c) 2011-present Stuart Herbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,22 +34,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib
+ * @subpackage  TasksLib1
  * @author      Stuart Herbert <stuart@stuartherbert.com>
- * @copyright   2011 Stuart Herbert
+ * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib;
+namespace Phix_Project\TasksLib1;
 
 use Phix_Project\ExceptionsLib\E5xx_InternalServerErrorException;
 
-class E5xx_TaskFailedException extends E5xx_InternalServerErrorException
+class E5xx_TaskNotInitialisedException extends E5xx_InternalServerErrorException
 {
-        public function __construct($taskName, $problem, $cause = null)
+        public function __construct($taskName)
         {
-                parent::__construct("Task '$taskName' failed: $problem", $cause);
+                parent::__construct("Task '$taskName' has not been initialised; cannot execute");
         }
 }

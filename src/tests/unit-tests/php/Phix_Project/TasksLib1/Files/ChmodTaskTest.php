@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2011 Stuart Herbert.
+ * Copyright (c) 2011-present Stuart Herbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,17 +34,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib
+ * @subpackage  TasksLib1
  * @author      Stuart Herbert <stuart@stuartherbert.com>
- * @copyright   2011 Stuart Herbert
+ * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib;
+namespace Phix_Project\TasksLib1;
 
-class Files_ChmodTaskTest extends \PHPUnit_Framework_TestCase
+use PHPUnit_Framework_TestCase;
+
+class Files_ChmodTaskTest extends PHPUnit_Framework_TestCase
 {
         public function testCanInstantiate()
         {
@@ -52,25 +54,25 @@ class Files_ChmodTaskTest extends \PHPUnit_Framework_TestCase
                 $this->assertTrue($task instanceof Files_ChmodTask);
                 $this->assertTrue($task instanceof TaskBase);
         }
-        
+
         public function testCanInitialise()
         {
                 $task = new Files_ChmodTask();
                 $task->initWithFileAndMode('/tmp/chmodtasktest', 0644);
                 $task->requireInitialisedTask();
-                
+
                 // if we get here, the previous method call did not throw
                 // an exception
                 $this->assertTrue(true);
         }
-        
+
         public function testThrowsExceptionIfNotInitialised()
         {
                 // setup
                 $queue = new TaskQueue();
                 $task = new Files_ChmodTask();
                 $queue->queueTask($task);
-                
+
                 // action
                 $caughtException = false;
                 try
@@ -81,11 +83,11 @@ class Files_ChmodTaskTest extends \PHPUnit_Framework_TestCase
                 {
                         $caughtException = true;
                 }
-                
+
                 // check
                 $this->assertTrue($caughtException);
         }
-        
+
         public function testCanSetModeOnFiles()
         {
                 // setup
@@ -96,20 +98,20 @@ class Files_ChmodTaskTest extends \PHPUnit_Framework_TestCase
                         file_put_contents($fileToChange, '');
                 }
                 chmod($fileToChange, 0644);
-                
+
                 $queue = new TaskQueue();
-                $task  = new Files_ChmodTask();                
+                $task  = new Files_ChmodTask();
                 $task->initWithFileAndMode($fileToChange, $targetMode);
                 $queue->queueTask($task);
-                
+
                 $this->assertTrue(file_exists($fileToChange));
-                
+
                 // action
                 $queue->executeTasks();
-                
+
                 // check
                 $this->assertEquals(0100755, fileperms($fileToChange));
-                
+
                 // clean up after ourselves
                 \unlink($fileToChange);
         }

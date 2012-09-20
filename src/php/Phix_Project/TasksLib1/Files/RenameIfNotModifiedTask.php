@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2011 Stuart Herbert.
+ * Copyright (c) 2011-present Stuart Herbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,102 +34,64 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib
+ * @subpackage  TasksLib1
  * @author      Stuart Herbert <stuart@stuartherbert.com>
- * @copyright   2011 Stuart Herbert
+ * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib;
+namespace Phix_Project\TasksLib1;
 
-class Files_CpTask extends TaskBase
+class Files_RenameIfNotModifiedTask extends TaskBase
 {
-        protected $src = null;
-        protected $dest = null;
-        
-        public function initWithFilesOrFolders($src, $dest)
+        protected $oldName   = null;
+        protected $newName   = null;
+        protected $oldMd5sum = null;
+
+        public function initWithFileAndChecksum($oldName, $newName, $md5sum)
         {
-                $this->src  = $src;
-                $this->dest = $dest;
+                $this->oldName   = $oldName;
+                $this->newName   = $newName;
+                $this->oldMd5sum = $md5sum;
         }
-        
+
         public function requireInitialisedTask()
         {
-                if ($this->src == null || $this->dest == null)
+                if ($this->oldName == null || $this->newName == null || $this->oldMd5sum == null)
                 {
                         throw new E5xx_TaskNotInitialisedException(__CLASS__);
                 }
         }
-        
+
         protected function performTask()
         {
-                if (!\is_dir($this->src))
+                $actualSum = md5_file($this->oldName);
+                if ($actualSum == $this->oldMd5sum)
                 {
-                        $this->copyFile($this->src, $this->dest);
-                }
-                else
-                {
-                        $this->recursiveCopyFolders($this->src, $this->dest);
+                        $this->moveFile($this->oldName, $this->newName);
                 }
         }
-        
-        protected function copyFile($src, $dest)
+
+        protected function moveFile($src, $dest)
         {
                 // make sure $dest is a filename
                 if (is_dir($dest))
                 {
                         $dest = $dest . DIRECTORY_SEPARATOR . basename($src);
                 }
-                
-                // copy the file
-                copy($src, $dest);
 
-                // set the mode to match
-                chmod($dest, fileperms($src) & 0777);
+                // move the file
+                rename($src, $dest);
         }
 
-        protected function recursiveCopyFolders($src, $dest)
-        {
-                if (!\is_dir($dest))
-                {
-                        \mkdir($dest);
-                }
-
-                $dir = \opendir($src);
-                if (!$dir)
-                {
-                        // @codeCoverageIgnoreStart
-                        throw new \Exception('unable to open folder ' . $src . ' for reading');
-                        // @codeCoverageIgnoreEnd
-                }
-                
-                while (false !== ($entry = \readdir($dir)))
-                {
-                        if ($entry == '.' || $entry == '..')
-                        {
-                                continue;
-                        }
-
-                        $srcEntry = $src . DIRECTORY_SEPARATOR . $entry;
-                        $dstEntry = $dest . DIRECTORY_SEPARATOR . $entry;
-
-                        if (\is_file($srcEntry))
-                        {
-                                $this->copyFile($srcEntry, $dstEntry);
-                        }
-                        else if (\is_dir($srcEntry))
-                        {
-                                $this->recursiveCopyFolders($srcEntry, $dstEntry);
-                        }
-                }
-                \closedir($dir);
-        }        
-        
         public function requireSuccessfulTask()
         {
                 // does the destination exist?
-                
+                if (!file_exists($this->newName))
+                {
+                        throw new E5xx_TaskFailedException(__CLASS__, "original file had been modified");
+                }
         }
 }

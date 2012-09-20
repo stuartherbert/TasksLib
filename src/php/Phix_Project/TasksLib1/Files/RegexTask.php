@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2011 Stuart Herbert.
+ * Copyright (c) 2011-present Stuart Herbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,22 +34,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib
+ * @subpackage  TasksLib1
  * @author      Stuart Herbert <stuart@stuartherbert.com>
- * @copyright   2011 Stuart Herbert
+ * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib;
+namespace Phix_Project\TasksLib1;
 
-use Phix_Project\ExceptionsLib\E5xx_InternalServerErrorException;
-
-class E5xx_NotAValidTaskException extends E5xx_InternalServerErrorException
+class Files_RegexTask extends TaskBase
 {
-        public function __construct($class)
+        protected $file = null;
+        protected $regex = null;
+        protected $replace = null;
+
+        public function initWithFileAndRegex($file, $regex, $replace)
         {
-                parent::__construct("Object of type '$class' is not a valid task");
+                $this->file = $file;
+                $this->regex = $regex;
+                $this->replace = $replace;
+        }
+
+        public function requireInitialisedTask()
+        {
+                if ($this->file == null || $this->regex == null || $this->replace == null)
+                {
+                        throw new E5xx_TaskNotInitialisedException(__CLASS__);
+                }
+        }
+
+        protected function performTask()
+        {
+                // no need to check the return code, because TaskQueue
+                // will detect any PHP errors thrown, and turn them
+                // into exceptions
+                $haystack = file_get_contents($this->file);
+                $haystack = preg_replace($this->regex, $this->replace, $haystack);
+                file_put_contents($this->file, $haystack);
+        }
+
+        public function requireSuccessfulTask()
+        {
+                // this is impossible to test, because there are no
+                // guarantees that the regex was supposed to match
+                // anything in the first place!!
         }
 }
