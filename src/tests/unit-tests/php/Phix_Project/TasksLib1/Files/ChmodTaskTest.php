@@ -71,12 +71,12 @@ class Files_ChmodTaskTest extends PHPUnit_Framework_TestCase
                 // setup
                 $queue = new TaskQueue();
                 $task = new Files_ChmodTask();
-                $queue->queueTask($task);
 
                 // action
                 $caughtException = false;
                 try
                 {
+                        $queue->queueTask($task);
                         $queue->executeTasks();
                 }
                 catch (E5xx_TaskNotInitialisedException $e)

@@ -44,6 +44,221 @@
 
 namespace Phix_Project\TasksLib1;
 
+use stdClass;
+use PHPUnit_Framework_TestCase;
+
+class TaskQueueTest extends PHPUnit_Framework_TestCase
+{
+        public function testCanInitialise()
+        {
+                $queue = new TaskQueue();
+                $this->assertTrue($queue instanceof TaskQueue);
+        }
+
+        public function testStartsWithEmptyQueue()
+        {
+                $queue = new TaskQueue();
+                $this->assertTrue($queue instanceof TaskQueue);
+
+                // is the queue empty?
+                $this->assertEquals(0, $queue->count());
+        }
+
+        public function testCanAddTaskToQueue()
+        {
+                // setup
+                $queue = new TaskQueue();
+                $this->assertTrue($queue instanceof TaskQueue);
+
+                $task = new DummyTask();
+                $task->init(true);
+
+                // action
+                $queue->queueTask($task);
+
+                // check
+                $this->assertEquals(1, $queue->count());
+                $queuedTask = $queue->dequeue();
+                $this->assertSame($task, $queuedTask);
+
+                // add a second task
+                $task2 = new DummyTask();
+                $task2->init(true);
+                $queue->queueTask($task);
+                $queue->enqueue($task2);
+
+                // check
+                $this->assertEquals(2, $queue->count());
+                $queuedTask = $queue->dequeue();
+                $queuedTask2 = $queue->dequeue();
+                $this->assertSame($task, $queuedTask);
+                $this->assertSame($task2, $queuedTask2);
+        }
+
+        public function testCannotAddNonTaskToQueue()
+        {
+                // setup
+                $queue = new TaskQueue();
+                $this->assertTrue($queue instanceof TaskQueue);
+
+                $nonTask = new stdClass();
+                $caughtException = false;
+
+                // action
+                try
+                {
+                        $queue->enqueue($nonTask);
+                }
+                catch (E5xx_NotAValidTaskException $e)
+                {
+                        $caughtException = true;
+                }
+
+                $this->assertTrue($caughtException);
+        }
+
+        public function testCanExecuteTasks()
+        {
+                // setup
+                $queue = new TaskQueue();
+                $this->assertTrue($queue instanceof TaskQueue);
+
+                $tasks = array
+                (
+                    new DummyTask(),
+                    new DummyTask(),
+                    new DummyTask()
+                );
+
+                foreach ($tasks as $task)
+                {
+                        $task->init(true);
+                        $this->assertFalse($task->taskPerformed);
+                        $queue->queueTask($task);
+                }
+
+                // action
+                $queue->executeTasks();
+
+                // make sure each task was executed
+                foreach ($tasks as $task)
+                {
+                        $this->assertTrue($task->taskPerformed);
+                }
+        }
+
+        public function testThrowsExceptionWhenQueueingUninitialisedTask()
+        {
+                // setup
+                $queue = new TaskQueue();
+                $this->assertTrue($queue instanceof TaskQueue);
+
+                $tasks = array
+                (
+                    new DummyTask(),
+                    new DummyTask(),
+                    new DummyTask()
+                );
+
+                // initialise just the first one
+                $tasks[0]->init(true);
+
+                $caughtException = false;
+
+                // action
+                try
+                {
+                        foreach ($tasks as $task)
+                        {
+                                $this->assertFalse($task->taskPerformed);
+                                $queue->queueTask($task);
+                        }
+                }
+                catch (E5xx_TaskNotInitialisedException $e)
+                {
+                        $caughtException = true;
+                }
+
+                // check the results
+                $this->assertTrue($caughtException);
+        }
+
+        public function testThrowsExceptionWhenATaskFails()
+        {
+                // setup
+                $queue = new TaskQueue();
+                $this->assertTrue($queue instanceof TaskQueue);
+
+                $task = new DummyTask();
+                $task->init(false);
+                $queue->queueTask($task);
+
+                $caughtException = false;
+
+                // action
+                try
+                {
+                        $queue->executeTasks();
+                }
+                catch (E5xx_TaskFailedException $e)
+                {
+                        $caughtException = true;
+                }
+
+                // check the results
+                $this->assertTrue($caughtException);
+                $this->assertTrue($task->taskPerformed);
+        }
+
+        public function testStopsExecutingTheQueueWhenATaskFails()
+        {
+                // setup
+                $queue = new TaskQueue();
+                $this->assertTrue($queue instanceof TaskQueue);
+
+                $tasks = array
+                (
+                    new DummyTask(),
+                    new DummyTask(),
+                    new DummyTask()
+                );
+
+                // first task will succeed, second task will fail
+                $tasks[0]->init(true);
+                $tasks[1]->init(false);
+                $tasks[2]->init(true);
+
+                foreach ($tasks as $task)
+                {
+                        $this->assertFalse($task->taskPerformed);
+                        $queue->queueTask($task);
+                }
+
+                $caughtException = false;
+
+                // action
+                try
+                {
+                        $queue->executeTasks();
+                }
+                catch (E5xx_TaskFailedException $e)
+                {
+                        $caughtException = true;
+                }
+
+                // check the results
+                $this->assertTrue($caughtException);
+
+                // first task succeeded, no exception
+                $this->assertTrue($tasks[0]->taskPerformed);
+
+                // second task was performed, but failed
+                $this->assertTrue($tasks[1]->taskPerformed);
+
+                // third task was never executed
+                $this->assertFalse($tasks[2]->taskPerformed);
+        }
+}
 
 class DummyTask extends TaskBase
 {
@@ -94,220 +309,5 @@ class DummyTask extends TaskBase
                 {
                         throw new E5xx_TaskFailedException(__CLASS__, "did not succeed");
                 }
-        }
-}
-
-class TaskQueueTest extends \PHPUnit_Framework_TestCase
-{
-        public function testCanInitialise()
-        {
-                $queue = new TaskQueue();
-                $this->assertTrue($queue instanceof TaskQueue);
-        }
-
-        public function testStartsWithEmptyQueue()
-        {
-                $queue = new TaskQueue();
-                $this->assertTrue($queue instanceof TaskQueue);
-
-                // is the queue empty?
-                $this->assertEquals(0, $queue->count());
-        }
-
-        public function testCanAddTaskToQueue()
-        {
-                // setup
-                $queue = new TaskQueue();
-                $this->assertTrue($queue instanceof TaskQueue);
-
-                $task = new DummyTask();
-
-                // action
-                $queue->queueTask($task);
-
-                // check
-                $this->assertEquals(1, $queue->count());
-                $queuedTask = $queue->dequeue();
-                $this->assertSame($task, $queuedTask);
-
-                // add a second task
-                $task2 = new DummyTask();
-                $queue->queueTask($task);
-                $queue->enqueue($task2);
-
-                // check
-                $this->assertEquals(2, $queue->count());
-                $queuedTask = $queue->dequeue();
-                $queuedTask2 = $queue->dequeue();
-                $this->assertSame($task, $queuedTask);
-                $this->assertSame($task2, $queuedTask2);
-        }
-
-        public function testCannotAddNonTaskToQueue()
-        {
-                // setup
-                $queue = new TaskQueue();
-                $this->assertTrue($queue instanceof TaskQueue);
-
-                $nonTask = new \stdClass();
-                $caughtException = false;
-
-                // action
-                try
-                {
-                        $queue->enqueue($nonTask);
-                }
-                catch (E5xx_NotAValidTaskException $e)
-                {
-                        $caughtException = true;
-                }
-
-                $this->assertTrue($caughtException);
-        }
-
-        public function testCanExecuteTasks()
-        {
-                // setup
-                $queue = new TaskQueue();
-                $this->assertTrue($queue instanceof TaskQueue);
-
-                $tasks = array
-                (
-                    new DummyTask(),
-                    new DummyTask(),
-                    new DummyTask()
-                );
-
-                foreach ($tasks as $task)
-                {
-                        $task->init(true);
-                        $this->assertFalse($task->taskPerformed);
-                        $queue->queueTask($task);
-                }
-
-                // action
-                $queue->executeTasks();
-
-                // make sure each task was executed
-                foreach ($tasks as $task)
-                {
-                        $this->assertTrue($task->taskPerformed);
-                }
-        }
-
-        public function testThrowsExceptionWhenExecutingUninitialisedTask()
-        {
-                // setup
-                $queue = new TaskQueue();
-                $this->assertTrue($queue instanceof TaskQueue);
-
-                $tasks = array
-                (
-                    new DummyTask(),
-                    new DummyTask(),
-                    new DummyTask()
-                );
-
-                // initialise just the first one
-                $tasks[0]->init(true);
-
-                foreach ($tasks as $task)
-                {
-                        $this->assertFalse($task->taskPerformed);
-                        $queue->queueTask($task);
-                }
-
-                $caughtException = false;
-
-                // action
-                try
-                {
-                        $queue->executeTasks();
-                }
-                catch (E5xx_TaskNotInitialisedException $e)
-                {
-                        $caughtException = true;
-                }
-
-                // check the results
-                $this->assertTrue($caughtException);
-                $this->assertTrue($tasks[0]->taskPerformed);
-                $this->assertFalse($tasks[1]->taskPerformed);
-                $this->assertFalse($tasks[2]->taskPerformed);
-        }
-
-        public function testThrowsExceptionWhenATaskFails()
-        {
-                // setup
-                $queue = new TaskQueue();
-                $this->assertTrue($queue instanceof TaskQueue);
-
-                $task = new DummyTask();
-                $task->init(false);
-                $queue->queueTask($task);
-
-                $caughtException = false;
-
-                // action
-                try
-                {
-                        $queue->executeTasks();
-                }
-                catch (E5xx_TaskFailedException $e)
-                {
-                        $caughtException = true;
-                }
-
-                // check the results
-                $this->assertTrue($caughtException);
-                $this->assertTrue($task->taskPerformed);
-        }
-
-        public function testStopsExecutingTheQueueWhenATaskFails()
-        {
-                // setup
-                $queue = new TaskQueue();
-                $this->assertTrue($queue instanceof TaskQueue);
-
-                $tasks = array
-                (
-                    new DummyTask(),
-                    new DummyTask(),
-                    new DummyTask()
-                );
-
-                // initialise just the first one
-                $tasks[0]->init(true);
-                $tasks[1]->init(false);
-
-                foreach ($tasks as $task)
-                {
-                        $this->assertFalse($task->taskPerformed);
-                        $queue->queueTask($task);
-                }
-
-                $caughtException = false;
-
-                // action
-                try
-                {
-                        $queue->executeTasks();
-                }
-                catch (E5xx_TaskFailedException $e)
-                {
-                        $caughtException = true;
-                }
-
-                // check the results
-                $this->assertTrue($caughtException);
-
-                // first task succeeded, no exception
-                $this->assertTrue($tasks[0]->taskPerformed);
-
-                // second task was performed, but failed
-                $this->assertTrue($tasks[1]->taskPerformed);
-
-                // third task was never executed
-                $this->assertFalse($tasks[2]->taskPerformed);
         }
 }

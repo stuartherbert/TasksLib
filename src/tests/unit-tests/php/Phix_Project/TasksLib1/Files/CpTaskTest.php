@@ -71,12 +71,12 @@ class Files_CpTaskTest extends PHPUnit_Framework_TestCase
                 // setup
                 $queue = new TaskQueue();
                 $task = new Files_CpTask();
-                $queue->queueTask($task);
 
                 // action
                 $caughtException = false;
                 try
                 {
+                        $queue->queueTask($task);
                         $queue->executeTasks();
                 }
                 catch (E5xx_TaskNotInitialisedException $e)

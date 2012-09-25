@@ -61,6 +61,7 @@ class TaskQueue extends SplQueue
 
         public function queueTask(TaskBase $task)
         {
+                $task->requireInitialisedTask();
                 parent::enqueue($task);
         }
 
