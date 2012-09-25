@@ -65,7 +65,7 @@ class Files_CpTask extends TaskBase
 
         protected function performTask()
         {
-                if (!\is_dir($this->src))
+                if (!is_dir($this->src))
                 {
                         $this->copyFile($this->src, $this->dest);
                 }
@@ -86,26 +86,40 @@ class Files_CpTask extends TaskBase
                 // copy the file
                 copy($src, $dest);
 
+                // did it work?
+                if (!file_exists($dest))
+                {
+                        // @codeCoverageIgnoreStart
+                        throw new E5xx_TaskFailedException(__CLASS__, "file '$src' not copied to '$dest'");
+                        // @codeCoverageIgnoreEnd
+                }
+
                 // set the mode to match
                 chmod($dest, fileperms($src) & 0777);
         }
 
         protected function recursiveCopyFolders($src, $dest)
         {
-                if (!\is_dir($dest))
+                if (!is_dir($dest))
                 {
-                        \mkdir($dest);
+                        mkdir($dest);
+                        if (!is_dir($dest))
+                        {
+                                // @codeCoverageIgnoreStart
+                                throw new E5xx_TaskFailedException(__CLASS__, "unable to create directory '$dest'");
+                                // @codeCoverageIgnoreEnd
+                        }
                 }
 
-                $dir = \opendir($src);
+                $dir = opendir($src);
                 if (!$dir)
                 {
                         // @codeCoverageIgnoreStart
-                        throw new \Exception('unable to open folder ' . $src . ' for reading');
+                        throw new E5xx_TaskFailedException(__CLASS__, 'unable to open folder ' . $src . ' for reading');
                         // @codeCoverageIgnoreEnd
                 }
 
-                while (false !== ($entry = \readdir($dir)))
+                while (false !== ($entry = readdir($dir)))
                 {
                         if ($entry == '.' || $entry == '..')
                         {
@@ -115,16 +129,16 @@ class Files_CpTask extends TaskBase
                         $srcEntry = $src . DIRECTORY_SEPARATOR . $entry;
                         $dstEntry = $dest . DIRECTORY_SEPARATOR . $entry;
 
-                        if (\is_file($srcEntry))
+                        if (is_file($srcEntry))
                         {
                                 $this->copyFile($srcEntry, $dstEntry);
                         }
-                        else if (\is_dir($srcEntry))
+                        else if (is_dir($srcEntry))
                         {
                                 $this->recursiveCopyFolders($srcEntry, $dstEntry);
                         }
                 }
-                \closedir($dir);
+                closedir($dir);
         }
 
         public function requireSuccessfulTask()
