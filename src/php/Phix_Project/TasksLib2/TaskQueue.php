@@ -34,7 +34,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib1
+ * @subpackage  TasksLib2
  * @author      Stuart Herbert <stuart@stuartherbert.com>
  * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
@@ -42,43 +42,38 @@
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib1;
+namespace Phix_Project\TasksLib2;
 
-class Files_RegexTask extends TaskBase
+use SplQueue;
+use Phix_Project\ExceptionsLib\Legacy_ErrorHandler;
+
+class TaskQueue extends SplQueue
 {
-        protected $file = null;
-        protected $regex = null;
-        protected $replace = null;
-
-        public function initWithFileAndRegex($file, $regex, $replace)
+        public function enqueue($obj)
         {
-                $this->file = $file;
-                $this->regex = $regex;
-                $this->replace = $replace;
-        }
-
-        public function requireInitialisedTask()
-        {
-                if ($this->file == null || $this->regex == null || $this->replace == null)
+                if (!$obj instanceof TaskBase)
                 {
-                        throw new E5xx_TaskNotInitialisedException(__CLASS__);
+                        throw new E5xx_NotAValidTaskException(get_class($obj));
                 }
+
+                $this->queueTask($obj);
         }
 
-        protected function performTask()
+        public function queueTask(TaskBase $task)
         {
-                // no need to check the return code, because TaskQueue
-                // will detect any PHP errors thrown, and turn them
-                // into exceptions
-                $haystack = file_get_contents($this->file);
-                $haystack = preg_replace($this->regex, $this->replace, $haystack);
-                file_put_contents($this->file, $haystack);
+                $task->requireInitialisedTask();
+                parent::enqueue($task);
         }
 
-        public function requireSuccessfulTask()
+        public function executeTasks()
         {
-                // this is impossible to test, because there are no
-                // guarantees that the regex was supposed to match
-                // anything in the first place!!
+                $wrapper = new Legacy_ErrorHandler();
+                $wrapped = function($task) { return $task->executeTask(); };
+
+                while (!$this->isEmpty())
+                {
+                        $task = $this->dequeue();
+                        $wrapper->run($wrapped, array($task));
+                }
         }
 }

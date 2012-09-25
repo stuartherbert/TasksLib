@@ -34,7 +34,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib1
+ * @subpackage  TasksLib2
  * @author      Stuart Herbert <stuart@stuartherbert.com>
  * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
@@ -42,56 +42,14 @@
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib1;
+namespace Phix_Project\TasksLib2;
 
-class Files_RenameIfNotModifiedTask extends TaskBase
+use Phix_Project\ExceptionsLib\E5xx_InternalServerErrorException;
+
+class E5xx_TaskNotInitialisedException extends E5xx_InternalServerErrorException
 {
-        protected $oldName   = null;
-        protected $newName   = null;
-        protected $oldMd5sum = null;
-
-        public function initWithFileAndChecksum($oldName, $newName, $md5sum)
+        public function __construct($taskName)
         {
-                $this->oldName   = $oldName;
-                $this->newName   = $newName;
-                $this->oldMd5sum = $md5sum;
-        }
-
-        public function requireInitialisedTask()
-        {
-                if ($this->oldName == null || $this->newName == null || $this->oldMd5sum == null)
-                {
-                        throw new E5xx_TaskNotInitialisedException(__CLASS__);
-                }
-        }
-
-        protected function performTask()
-        {
-                $actualSum = md5_file($this->oldName);
-                if ($actualSum == $this->oldMd5sum)
-                {
-                        $this->moveFile($this->oldName, $this->newName);
-                }
-        }
-
-        protected function moveFile($src, $dest)
-        {
-                // make sure $dest is a filename
-                if (is_dir($dest))
-                {
-                        $dest = $dest . DIRECTORY_SEPARATOR . basename($src);
-                }
-
-                // move the file
-                rename($src, $dest);
-        }
-
-        public function requireSuccessfulTask()
-        {
-                // does the destination exist?
-                if (!file_exists($this->newName))
-                {
-                        throw new E5xx_TaskFailedException(__CLASS__, "original file had been modified");
-                }
+                parent::__construct("Task '$taskName' has not been initialised; cannot execute");
         }
 }

@@ -34,7 +34,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib1
+ * @subpackage  TasksLib2
  * @author      Stuart Herbert <stuart@stuartherbert.com>
  * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
@@ -42,12 +42,12 @@
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib1;
+namespace Phix_Project\TasksLib2;
 
 use PHPUnit_Framework_TestCase;
 use Phix_Project\ExceptionsLib\E5xx_InternalServerErrorException;
 
-class E5xx_NotAValidTaskExceptionTest extends PHPUnit_Framework_TestCase
+class E5xx_TaskFailedExceptionTest extends PHPUnit_Framework_TestCase
 {
         public function testCanThrowAsException()
         {
@@ -57,9 +57,9 @@ class E5xx_NotAValidTaskExceptionTest extends PHPUnit_Framework_TestCase
                 // action
                 try
                 {
-                        throw new E5xx_NotAValidTaskException("default");
+                        throw new E5xx_TaskFailedException("mkdir", "permission denied");
                 }
-                catch (E5xx_NotAValidTaskException $e)
+                catch (E5xx_TaskFailedException $e)
                 {
                         $caughtException = true;
                 }
@@ -77,9 +77,9 @@ class E5xx_NotAValidTaskExceptionTest extends PHPUnit_Framework_TestCase
                 // action
                 try
                 {
-                        throw new E5xx_NotAValidTaskException("default");
+                        throw new E5xx_TaskFailedException("mkdir", "permission denied");
                 }
-                catch (E5xx_NotAValidTaskException $e)
+                catch (E5xx_TaskFailedException $e)
                 {
                         $caughtException = true;
                         $caughtCode      = $e->getCode();
@@ -98,11 +98,11 @@ class E5xx_NotAValidTaskExceptionTest extends PHPUnit_Framework_TestCase
                 // action
                 try
                 {
-                        throw new E5xx_NotAValidTaskException("default");
+                        throw new E5xx_TaskFailedException("mkdir", "permission denied");
                 }
                 catch (E5xx_InternalServerErrorException $e)
                 {
-                        if ($e instanceof E5xx_NotAValidTaskException)
+                        if ($e instanceof E5xx_TaskFailedException)
                         {
                                 $caughtException = true;
                         }
@@ -117,14 +117,14 @@ class E5xx_NotAValidTaskExceptionTest extends PHPUnit_Framework_TestCase
                 // setup
                 $caughtException = false;
                 $caughtMessage   = null;
-                $expectedMessage = "Object of type 'default' is not a valid task";
+                $expectedMessage = "Task 'mkdir' failed: permission denied";
 
                 // action
                 try
                 {
-                        throw new E5xx_NotAValidTaskException("default");
+                        throw new E5xx_TaskFailedException("mkdir", "permission denied");
                 }
-                catch (E5xx_NotAValidTaskException $e)
+                catch (E5xx_TaskFailedException $e)
                 {
                         $caughtException = true;
                         $caughtMessage   = $e->getMessage();
