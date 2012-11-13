@@ -57,7 +57,7 @@ class Files_CpTask extends TaskBase
 
         public function requireInitialisedTask()
         {
-                if ($this->src == null || $this->dest == null)
+                if ($this->src === null || $this->dest === null)
                 {
                         throw new E5xx_TaskNotInitialisedException(__CLASS__);
                 }
