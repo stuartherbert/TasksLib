@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2011 Stuart Herbert.
+ * Copyright (c) 2011-present Stuart Herbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,64 +34,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib
+ * @subpackage  TasksLib2
  * @author      Stuart Herbert <stuart@stuartherbert.com>
- * @copyright   2011 Stuart Herbert
+ * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib;
+namespace Phix_Project\TasksLib2;
 
-class Files_RenameIfNotModifiedTask extends TaskBase
+class Files_ChmodTask extends TaskBase
 {
-        protected $oldName   = null;
-        protected $newName   = null;
-        protected $oldMd5sum = null;
-        
-        public function initWithFileAndChecksum($oldName, $newName, $md5sum)
+        protected $file = null;
+        protected $mode = null;
+
+        public function initWithFileAndMode($file, $mode)
         {
-                $this->oldName   = $oldName;
-                $this->newName   = $newName;
-                $this->oldMd5sum = $md5sum;
+                $this->file = $file;
+                $this->mode = $mode;
         }
-        
+
         public function requireInitialisedTask()
         {
-                if ($this->oldName == null || $this->newName == null || $this->oldMd5sum == null)
+                if ($this->file == null || $this->mode == null)
                 {
                         throw new E5xx_TaskNotInitialisedException(__CLASS__);
                 }
         }
-        
+
         protected function performTask()
         {
-                $actualSum = md5_file($this->oldName);
-                if ($actualSum == $this->oldMd5sum)
-                {
-                        $this->moveFile($this->oldName, $this->newName);
-                }
+                // no need to check the return code, because TaskQueue
+                // will detect any PHP errors thrown, and turn them
+                // into exceptions
+                \chmod($this->file, $this->mode);
         }
-        
-        protected function moveFile($src, $dest)
-        {
-                // make sure $dest is a filename
-                if (is_dir($dest))
-                {
-                        $dest = $dest . DIRECTORY_SEPARATOR . basename($src);
-                }
-                
-                // move the file
-                rename($src, $dest);
-        }
-        
+
         public function requireSuccessfulTask()
         {
-                // does the destination exist?
-                if (!file_exists($this->newName))
+                // did the permissions change?
+                if ((\fileperms($this->file) & 0777) !== $this->mode)
                 {
-                        throw new E5xx_TaskFailedException(__CLASS__, "original file had been modified");
+                        // @codeCoverageIgnoreStart
+                        throw new E5xx_TaskFailedException(__CLASS__, $this->file . " permissions could not be changed to " . $this->mask);
+                        // @codeCoverageIgnoreEnd
                 }
         }
 }

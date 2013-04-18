@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2011 Stuart Herbert.
+ * Copyright (c) 2011-present Stuart Herbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,38 +34,38 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib
+ * @subpackage  TasksLib2
  * @author      Stuart Herbert <stuart@stuartherbert.com>
- * @copyright   2011 Stuart Herbert
+ * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib;
+namespace Phix_Project\TasksLib2;
 
 class Files_CpTask extends TaskBase
 {
         protected $src = null;
         protected $dest = null;
-        
+
         public function initWithFilesOrFolders($src, $dest)
         {
                 $this->src  = $src;
                 $this->dest = $dest;
         }
-        
+
         public function requireInitialisedTask()
         {
-                if ($this->src == null || $this->dest == null)
+                if ($this->src === null || $this->dest === null)
                 {
                         throw new E5xx_TaskNotInitialisedException(__CLASS__);
                 }
         }
-        
+
         protected function performTask()
         {
-                if (!\is_dir($this->src))
+                if (!is_dir($this->src))
                 {
                         $this->copyFile($this->src, $this->dest);
                 }
@@ -74,7 +74,7 @@ class Files_CpTask extends TaskBase
                         $this->recursiveCopyFolders($this->src, $this->dest);
                 }
         }
-        
+
         protected function copyFile($src, $dest)
         {
                 // make sure $dest is a filename
@@ -82,9 +82,17 @@ class Files_CpTask extends TaskBase
                 {
                         $dest = $dest . DIRECTORY_SEPARATOR . basename($src);
                 }
-                
+
                 // copy the file
                 copy($src, $dest);
+
+                // did it work?
+                if (!file_exists($dest))
+                {
+                        // @codeCoverageIgnoreStart
+                        throw new E5xx_TaskFailedException(__CLASS__, "file '$src' not copied to '$dest'");
+                        // @codeCoverageIgnoreEnd
+                }
 
                 // set the mode to match
                 chmod($dest, fileperms($src) & 0777);
@@ -92,20 +100,26 @@ class Files_CpTask extends TaskBase
 
         protected function recursiveCopyFolders($src, $dest)
         {
-                if (!\is_dir($dest))
+                if (!is_dir($dest))
                 {
-                        \mkdir($dest);
+                        mkdir($dest);
+                        if (!is_dir($dest))
+                        {
+                                // @codeCoverageIgnoreStart
+                                throw new E5xx_TaskFailedException(__CLASS__, "unable to create directory '$dest'");
+                                // @codeCoverageIgnoreEnd
+                        }
                 }
 
-                $dir = \opendir($src);
+                $dir = opendir($src);
                 if (!$dir)
                 {
                         // @codeCoverageIgnoreStart
-                        throw new \Exception('unable to open folder ' . $src . ' for reading');
+                        throw new E5xx_TaskFailedException(__CLASS__, 'unable to open folder ' . $src . ' for reading');
                         // @codeCoverageIgnoreEnd
                 }
-                
-                while (false !== ($entry = \readdir($dir)))
+
+                while (false !== ($entry = readdir($dir)))
                 {
                         if ($entry == '.' || $entry == '..')
                         {
@@ -115,21 +129,21 @@ class Files_CpTask extends TaskBase
                         $srcEntry = $src . DIRECTORY_SEPARATOR . $entry;
                         $dstEntry = $dest . DIRECTORY_SEPARATOR . $entry;
 
-                        if (\is_file($srcEntry))
+                        if (is_file($srcEntry))
                         {
                                 $this->copyFile($srcEntry, $dstEntry);
                         }
-                        else if (\is_dir($srcEntry))
+                        else if (is_dir($srcEntry))
                         {
                                 $this->recursiveCopyFolders($srcEntry, $dstEntry);
                         }
                 }
-                \closedir($dir);
-        }        
-        
+                closedir($dir);
+        }
+
         public function requireSuccessfulTask()
         {
                 // does the destination exist?
-                
+
         }
 }

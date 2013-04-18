@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2011 Stuart Herbert.
+ * Copyright (c) 2011-present Stuart Herbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,17 +34,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib
+ * @subpackage  TasksLib2
  * @author      Stuart Herbert <stuart@stuartherbert.com>
- * @copyright   2011 Stuart Herbert
+ * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib;
+namespace Phix_Project\TasksLib2;
 
-class Files_MkdirTaskTest extends \PHPUnit_Framework_TestCase
+use PHPUnit_Framework_TestCase;
+
+class Files_MkdirTaskTest extends PHPUnit_Framework_TestCase
 {
         public function testCanInstantiate()
         {
@@ -52,59 +54,59 @@ class Files_MkdirTaskTest extends \PHPUnit_Framework_TestCase
                 $this->assertTrue($task instanceof Files_MkdirTask);
                 $this->assertTrue($task instanceof TaskBase);
         }
-        
+
         public function testCanInitialise()
         {
                 $task = new Files_MkdirTask();
                 $task->initWithFolder('/tmp/mkdirtasktest');
                 $task->requireInitialisedTask();
-                
+
                 // if we get here, the previous method call did not throw
                 // an exception
                 $this->assertTrue(true);
         }
-        
+
         public function testThrowsExceptionIfNotInitialised()
         {
                 // setup
                 $queue = new TaskQueue();
                 $task = new Files_MkdirTask();
-                $queue->queueTask($task);
-                
+
                 // action
                 $caughtException = false;
                 try
                 {
+                        $queue->queueTask($task);
                         $queue->executeTasks();
                 }
                 catch (E5xx_TaskNotInitialisedException $e)
                 {
                         $caughtException = true;
                 }
-                
+
                 // check
                 $this->assertTrue($caughtException);
         }
-        
+
         public function testCanCreateNewFolders()
         {
                 // setup
                 $folderToMake = "/tmp/mkdirtasktest";
-                
+
                 $queue = new TaskQueue();
-                $task  = new Files_MkdirTask();                
+                $task  = new Files_MkdirTask();
                 $task->initWithFolder($folderToMake);
                 $queue->queueTask($task);
-                
+
                 if (is_dir($folderToMake))
                 {
                         rmdir($folderToMake);
                 }
                 $this->assertFalse(is_dir($folderToMake));
-                
+
                 // action
                 $queue->executeTasks();
-                
+
                 // check
                 $this->assertTrue(is_dir($folderToMake));
                 // remove the folder we've just made
@@ -115,22 +117,22 @@ class Files_MkdirTaskTest extends \PHPUnit_Framework_TestCase
         {
                 // setup
                 $folderToMake = "/tmp/mkdirtasktest/1/2/3";
-                
+
                 $queue = new TaskQueue();
-                $task  = new Files_MkdirTask();                
+                $task  = new Files_MkdirTask();
                 $task->initWithFolder($folderToMake);
                 $queue->queueTask($task);
-                
+
                 if (is_dir($folderToMake))
                 {
                         rmdir($folderToMake);
                 }
                 $this->assertFalse(is_dir($folderToMake));
                 $this->assertFalse(is_dir(dirname($folderToMake)));
-                
+
                 // action
                 $queue->executeTasks();
-                
+
                 // check
                 $this->assertTrue(is_dir($folderToMake));
                 // remove the folder we've just made
@@ -146,27 +148,27 @@ class Files_MkdirTaskTest extends \PHPUnit_Framework_TestCase
                 // setup
                 $folderToMake = "/tmp/mkdirtasktest";
                 $targetUmask  = 0755;
-                
+
                 $queue = new TaskQueue();
-                $task  = new Files_MkdirTask();                
+                $task  = new Files_MkdirTask();
                 $task->initWithFolderAndUmask($folderToMake, $targetUmask);
                 $queue->queueTask($task);
-                
+
                 if (is_dir($folderToMake))
                 {
                         rmdir($folderToMake);
                 }
                 $this->assertFalse(is_dir($folderToMake));
-                
+
                 // action
                 $queue->executeTasks();
-                
+
                 // check
                 $this->assertTrue(is_dir($folderToMake));
                 $this->assertEquals($targetUmask, (fileperms($folderToMake) & 0777));
-                
+
                 // remove the folder we've just made
                 rmdir($folderToMake);
         }
-        
+
 }

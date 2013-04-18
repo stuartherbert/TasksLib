@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2011 Stuart Herbert.
+ * Copyright (c) 2011-present Stuart Herbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,107 +34,59 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib
+ * @subpackage  TasksLib2
  * @author      Stuart Herbert <stuart@stuartherbert.com>
- * @copyright   2011 Stuart Herbert
+ * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib;
+namespace Phix_Project\TasksLib2;
 
+use stdClass;
+use PHPUnit_Framework_TestCase;
 
-class DummyTask extends TaskBase
-{
-        protected $initialised = false;
-        protected $taskWillSucceed = false;
-        
-        public $taskPerformed = false;
-        
-        public function init($taskWillSucceed)
-        {
-                $this->initialised = true;
-                $this->taskWillSucceed = $taskWillSucceed;
-        }
-        
-        public function requireInitialisedTask()
-        {
-                if (!$this->initialised)
-                {
-                        throw new E5xx_TaskNotInitialisedException(__CLASS__);
-                }
-        }
-        
-        protected function performTask()
-        {
-                // make a note that we have been called
-                $this->taskPerformed = true;
-        }
-        
-        public function requireSuccessfulTask()
-        {
-                // this exception should never get thrown in testing
-                if (!$this->initialised)
-                {
-                        throw new E5xx_TaskFailedException(__CLASS__, 'was never initialised');
-                }
-                
-                // this exception should never get thrown in testing
-                // it is here to detect a problem in executing tasks
-                // properly
-                if (!$this->taskPerformed)
-                {
-                        throw new E5xx_TaskFailedException(__CLASS__, 'performTask() never called');
-                }
-                
-                // we can, and will, control whether this exception is
-                // thrown during testing
-                if (!$this->taskWillSucceed)
-                {
-                        throw new E5xx_TaskFailedException(__CLASS__, "did not succeed");
-                }
-        }
-}
-
-class TaskQueueTest extends \PHPUnit_Framework_TestCase
+class TaskQueueTest extends PHPUnit_Framework_TestCase
 {
         public function testCanInitialise()
         {
                 $queue = new TaskQueue();
                 $this->assertTrue($queue instanceof TaskQueue);
         }
-        
+
         public function testStartsWithEmptyQueue()
         {
                 $queue = new TaskQueue();
                 $this->assertTrue($queue instanceof TaskQueue);
-                                
+
                 // is the queue empty?
                 $this->assertEquals(0, $queue->count());
-        }        
-        
+        }
+
         public function testCanAddTaskToQueue()
         {
                 // setup
                 $queue = new TaskQueue();
                 $this->assertTrue($queue instanceof TaskQueue);
-                
+
                 $task = new DummyTask();
-                
+                $task->init(true);
+
                 // action
                 $queue->queueTask($task);
-                
+
                 // check
                 $this->assertEquals(1, $queue->count());
                 $queuedTask = $queue->dequeue();
                 $this->assertSame($task, $queuedTask);
-                
+
                 // add a second task
                 $task2 = new DummyTask();
+                $task2->init(true);
                 $queue->queueTask($task);
                 $queue->enqueue($task2);
-                
+
                 // check
                 $this->assertEquals(2, $queue->count());
                 $queuedTask = $queue->dequeue();
@@ -142,18 +94,18 @@ class TaskQueueTest extends \PHPUnit_Framework_TestCase
                 $this->assertSame($task, $queuedTask);
                 $this->assertSame($task2, $queuedTask2);
         }
-        
+
         public function testCannotAddNonTaskToQueue()
         {
                 // setup
                 $queue = new TaskQueue();
                 $this->assertTrue($queue instanceof TaskQueue);
-                
-                $nonTask = new \stdClass();
+
+                $nonTask = new stdClass();
                 $caughtException = false;
-                
+
                 // action
-                try 
+                try
                 {
                         $queue->enqueue($nonTask);
                 }
@@ -161,46 +113,46 @@ class TaskQueueTest extends \PHPUnit_Framework_TestCase
                 {
                         $caughtException = true;
                 }
-                
+
                 $this->assertTrue($caughtException);
         }
-        
+
         public function testCanExecuteTasks()
         {
                 // setup
                 $queue = new TaskQueue();
                 $this->assertTrue($queue instanceof TaskQueue);
-                
+
                 $tasks = array
                 (
                     new DummyTask(),
                     new DummyTask(),
                     new DummyTask()
                 );
-                
+
                 foreach ($tasks as $task)
                 {
                         $task->init(true);
                         $this->assertFalse($task->taskPerformed);
                         $queue->queueTask($task);
                 }
-                
+
                 // action
                 $queue->executeTasks();
-                
+
                 // make sure each task was executed
                 foreach ($tasks as $task)
                 {
                         $this->assertTrue($task->taskPerformed);
                 }
         }
-        
-        public function testThrowsExceptionWhenExecutingUninitialisedTask()
+
+        public function testThrowsExceptionWhenQueueingUninitialisedTask()
         {
                 // setup
                 $queue = new TaskQueue();
                 $this->assertTrue($queue instanceof TaskQueue);
-                
+
                 $tasks = array
                 (
                     new DummyTask(),
@@ -210,65 +162,60 @@ class TaskQueueTest extends \PHPUnit_Framework_TestCase
 
                 // initialise just the first one
                 $tasks[0]->init(true);
-                
-                foreach ($tasks as $task)
-                {
-                        $this->assertFalse($task->taskPerformed);
-                        $queue->queueTask($task);
-                }
-                
+
                 $caughtException = false;
-                
+
                 // action
                 try
-                {                        
-                        $queue->executeTasks();
+                {
+                        foreach ($tasks as $task)
+                        {
+                                $this->assertFalse($task->taskPerformed);
+                                $queue->queueTask($task);
+                        }
                 }
                 catch (E5xx_TaskNotInitialisedException $e)
                 {
                         $caughtException = true;
                 }
-                
+
                 // check the results
                 $this->assertTrue($caughtException);
-                $this->assertTrue($tasks[0]->taskPerformed);
-                $this->assertFalse($tasks[1]->taskPerformed);
-                $this->assertFalse($tasks[2]->taskPerformed);                
         }
-        
+
         public function testThrowsExceptionWhenATaskFails()
         {
                 // setup
                 $queue = new TaskQueue();
                 $this->assertTrue($queue instanceof TaskQueue);
-                
+
                 $task = new DummyTask();
                 $task->init(false);
                 $queue->queueTask($task);
-                
+
                 $caughtException = false;
-                
+
                 // action
                 try
-                {                        
+                {
                         $queue->executeTasks();
                 }
                 catch (E5xx_TaskFailedException $e)
                 {
                         $caughtException = true;
                 }
-                
+
                 // check the results
                 $this->assertTrue($caughtException);
                 $this->assertTrue($task->taskPerformed);
         }
-        
+
         public function testStopsExecutingTheQueueWhenATaskFails()
         {
                 // setup
                 $queue = new TaskQueue();
                 $this->assertTrue($queue instanceof TaskQueue);
-                
+
                 $tasks = array
                 (
                     new DummyTask(),
@@ -276,38 +223,91 @@ class TaskQueueTest extends \PHPUnit_Framework_TestCase
                     new DummyTask()
                 );
 
-                // initialise just the first one
+                // first task will succeed, second task will fail
                 $tasks[0]->init(true);
                 $tasks[1]->init(false);
-                
+                $tasks[2]->init(true);
+
                 foreach ($tasks as $task)
                 {
                         $this->assertFalse($task->taskPerformed);
                         $queue->queueTask($task);
                 }
-                
+
                 $caughtException = false;
-                
+
                 // action
                 try
-                {                        
+                {
                         $queue->executeTasks();
                 }
                 catch (E5xx_TaskFailedException $e)
                 {
                         $caughtException = true;
                 }
-                
+
                 // check the results
                 $this->assertTrue($caughtException);
-                
+
                 // first task succeeded, no exception
                 $this->assertTrue($tasks[0]->taskPerformed);
-                
+
                 // second task was performed, but failed
                 $this->assertTrue($tasks[1]->taskPerformed);
-                
+
                 // third task was never executed
-                $this->assertFalse($tasks[2]->taskPerformed);                
+                $this->assertFalse($tasks[2]->taskPerformed);
+        }
+}
+
+class DummyTask extends TaskBase
+{
+        protected $initialised = false;
+        protected $taskWillSucceed = false;
+
+        public $taskPerformed = false;
+
+        public function init($taskWillSucceed)
+        {
+                $this->initialised = true;
+                $this->taskWillSucceed = $taskWillSucceed;
+        }
+
+        public function requireInitialisedTask()
+        {
+                if (!$this->initialised)
+                {
+                        throw new E5xx_TaskNotInitialisedException(__CLASS__);
+                }
+        }
+
+        protected function performTask()
+        {
+                // make a note that we have been called
+                $this->taskPerformed = true;
+        }
+
+        public function requireSuccessfulTask()
+        {
+                // this exception should never get thrown in testing
+                if (!$this->initialised)
+                {
+                        throw new E5xx_TaskFailedException(__CLASS__, 'was never initialised');
+                }
+
+                // this exception should never get thrown in testing
+                // it is here to detect a problem in executing tasks
+                // properly
+                if (!$this->taskPerformed)
+                {
+                        throw new E5xx_TaskFailedException(__CLASS__, 'performTask() never called');
+                }
+
+                // we can, and will, control whether this exception is
+                // thrown during testing
+                if (!$this->taskWillSucceed)
+                {
+                        throw new E5xx_TaskFailedException(__CLASS__, "did not succeed");
+                }
         }
 }

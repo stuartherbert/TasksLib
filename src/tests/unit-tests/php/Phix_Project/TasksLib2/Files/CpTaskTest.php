@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2011 Stuart Herbert.
+ * Copyright (c) 2011-present Stuart Herbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,17 +34,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib
+ * @subpackage  TasksLib2
  * @author      Stuart Herbert <stuart@stuartherbert.com>
- * @copyright   2011 Stuart Herbert
+ * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib;
+namespace Phix_Project\TasksLib2;
 
-class Files_CpTaskTest extends \PHPUnit_Framework_TestCase
+use PHPUnit_Framework_TestCase;
+
+class Files_CpTaskTest extends PHPUnit_Framework_TestCase
 {
         public function testCanInstantiate()
         {
@@ -52,40 +54,40 @@ class Files_CpTaskTest extends \PHPUnit_Framework_TestCase
                 $this->assertTrue($task instanceof Files_CpTask);
                 $this->assertTrue($task instanceof TaskBase);
         }
-        
+
         public function testCanInitialise()
         {
                 $task = new Files_CpTask();
                 $task->initWithFilesOrFolders('/tmp/cptasktest', '/tmp/cptasktestdest');
                 $task->requireInitialisedTask();
-                
+
                 // if we get here, the previous method call did not throw
                 // an exception
                 $this->assertTrue(true);
         }
-        
+
         public function testThrowsExceptionIfNotInitialised()
         {
                 // setup
                 $queue = new TaskQueue();
                 $task = new Files_CpTask();
-                $queue->queueTask($task);
-                
+
                 // action
                 $caughtException = false;
                 try
                 {
+                        $queue->queueTask($task);
                         $queue->executeTasks();
                 }
                 catch (E5xx_TaskNotInitialisedException $e)
                 {
                         $caughtException = true;
                 }
-                
+
                 // check
                 $this->assertTrue($caughtException);
         }
-        
+
         public function testCanCopyFilesToNewFilename()
         {
                 // setup
@@ -99,21 +101,21 @@ class Files_CpTaskTest extends \PHPUnit_Framework_TestCase
                 {
                         unlink($fileToCopyTo);
                 }
-                
+
                 $queue = new TaskQueue();
-                $task  = new Files_CpTask();                
+                $task  = new Files_CpTask();
                 $task->initWithFilesOrFolders($fileToCopy, $fileToCopyTo);
                 $queue->queueTask($task);
-                
+
                 $this->assertTrue(file_exists($fileToCopy));
                 $this->assertFalse(file_exists($fileToCopyTo));
-                
+
                 // action
                 $queue->executeTasks();
-                
+
                 // check
                 $this->assertTrue(file_exists($fileToCopyTo));
-                
+
                 // clean up after ourselves
                 unlink($fileToCopy);
                 unlink($fileToCopyTo);
@@ -127,48 +129,48 @@ class Files_CpTaskTest extends \PHPUnit_Framework_TestCase
                 {
                         file_put_contents($fileToCopy, '');
                 }
-                
+
                 $dirToCopyTo = '/tmp/cptasktestdir';
                 if (!is_dir($dirToCopyTo))
                 {
                         mkdir($dirToCopyTo);
                 }
-                
+
                 $fileToCopyTo = $dirToCopyTo . '/cptasktest';
                 if (file_exists($fileToCopyTo))
                 {
                         unlink($fileToCopyTo);
                 }
-                
+
                 $queue = new TaskQueue();
-                $task  = new Files_CpTask();                
+                $task  = new Files_CpTask();
                 $task->initWithFilesOrFolders($fileToCopy, $dirToCopyTo);
                 $queue->queueTask($task);
-                
+
                 $this->assertTrue(file_exists($fileToCopy));
                 $this->assertFalse(file_exists($fileToCopyTo));
-                
+
                 // action
                 $queue->executeTasks();
-                
+
                 // check
                 $this->assertTrue(file_exists($fileToCopyTo));
-                
+
                 // clean up after ourselves
                 unlink($fileToCopy);
                 unlink($fileToCopyTo);
                 rmdir($dirToCopyTo);
         }
-        
+
         public function testCanCopyFolders()
         {
                 // setup
                 $baseCopyFromDir = '/tmp/cptasktest-from';
                 $this->createFolder($baseCopyFromDir);
-                
+
                 $baseCopyToDir = '/tmp/cptasktest-to';
                 $this->createFolder($baseCopyToDir);
-                
+
                 $files = array (
                     '1.txt',
                     '1/2.txt',
@@ -176,21 +178,21 @@ class Files_CpTaskTest extends \PHPUnit_Framework_TestCase
                     '3/4.txt',
                     '3/4/5.txt'
                 );
-                
+
                 foreach ($files as $filename)
                 {
                         $this->createFile($baseCopyFromDir . '/' . $filename);
                         $this->assertTrue(!file_exists($baseCopyToDir . '/' . $filename));
                 }
-                
+
                 $queue = new TaskQueue();
-                $task  = new Files_CpTask();                
+                $task  = new Files_CpTask();
                 $task->initWithFilesOrFolders($baseCopyFromDir, $baseCopyToDir);
                 $queue->queueTask($task);
-                
+
                 // action
                 $queue->executeTasks();
-                
+
                 // check
                 foreach ($files as $filename)
                 {
@@ -198,37 +200,37 @@ class Files_CpTaskTest extends \PHPUnit_Framework_TestCase
                         unlink($baseCopyFromDir . '/' . $filename);
                         unlink($baseCopyToDir . '/' . $filename);
                 }
-                
+
                 // clean up after ourselves
                 foreach (array_reverse($files) as $filename)
                 {
                         $dir = dirname($baseCopyFromDir . '/' . $filename);
                         rmdir($dir);
-                        
+
                         $dir = dirname($baseCopyToDir . '/' . $filename);
                         rmdir($dir);
                 }
         }
-        
+
         // helper functions
-        
+
         protected function createFile($filename)
         {
                 $now = time();
-                
+
                 if (!is_dir(dirname($filename)))
                 {
                         $this->createFolder(dirname($filename));
                 }
                 file_put_contents($filename, $now);
-                
+
                 return $now;
         }
-        
+
         protected function createFolder($folder)
         {
                 $parts = explode('/', $folder);
-                
+
                 $folderToMake = '';
                 foreach ($parts as $part)
                 {

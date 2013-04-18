@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2011 Stuart Herbert.
+ * Copyright (c) 2011-present Stuart Herbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,44 +34,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib
+ * @subpackage  TasksLib2
  * @author      Stuart Herbert <stuart@stuartherbert.com>
- * @copyright   2011 Stuart Herbert
+ * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib;
+namespace Phix_Project\TasksLib2;
 
-use Phix_Project\ExceptionsLib\Legacy_ErrorHandler;
+use Phix_Project\ExceptionsLib\E5xx_InternalServerErrorException;
 
-class TaskQueue extends \SplQueue
+class E5xx_NotAValidTaskException extends E5xx_InternalServerErrorException
 {
-        public function enqueue($obj)
+        public function __construct($class)
         {
-                if (!$obj instanceof TaskBase)
-                {
-                        throw new E5xx_NotAValidTaskException(get_class($obj));
-                }
-                
-                $this->queueTask($obj);
+                parent::__construct("Object of type '$class' is not a valid task");
         }
-        
-        public function queueTask(TaskBase $task)
-        {
-                parent::enqueue($task);
-        }
-        
-        public function executeTasks()
-        {
-                $wrapper = new Legacy_ErrorHandler();
-                $wrapped = function($task) { return $task->executeTask(); };
-                
-                while (!$this->isEmpty())
-                {
-                        $task = $this->dequeue();
-                        $wrapper->run($wrapped, array($task));
-                }
-        }        
 }

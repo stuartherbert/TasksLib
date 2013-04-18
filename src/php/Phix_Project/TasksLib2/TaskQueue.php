@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2011 Stuart Herbert.
+ * Copyright (c) 2011-present Stuart Herbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,31 +34,46 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib
+ * @subpackage  TasksLib2
  * @author      Stuart Herbert <stuart@stuartherbert.com>
- * @copyright   2011 Stuart Herbert
+ * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib;
+namespace Phix_Project\TasksLib2;
 
-abstract class TaskBase
+use SplQueue;
+use Phix_Project\ExceptionsLib\Legacy_ErrorHandler;
+
+class TaskQueue extends SplQueue
 {
-        public function executeTask()
+        public function enqueue($obj)
         {
-                // make sure that this task has been initialised
-                $this->requireInitialisedTask();
-                
-                // execute the task
-                $this->performTask();
-                
-                // did the task work?
-                $this->requireSuccessfulTask();
+                if (!$obj instanceof TaskBase)
+                {
+                        throw new E5xx_NotAValidTaskException(get_class($obj));
+                }
+
+                $this->queueTask($obj);
         }
-        
-        abstract public function requireInitialisedTask();
-        abstract protected function performTask();
-        abstract public function requireSuccessfulTask();
+
+        public function queueTask(TaskBase $task)
+        {
+                $task->requireInitialisedTask();
+                parent::enqueue($task);
+        }
+
+        public function executeTasks()
+        {
+                $wrapper = new Legacy_ErrorHandler();
+                $wrapped = function($task) { return $task->executeTask(); };
+
+                while (!$this->isEmpty())
+                {
+                        $task = $this->dequeue();
+                        $wrapper->run($wrapped, array($task));
+                }
+        }
 }

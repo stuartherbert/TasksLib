@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2011 Stuart Herbert.
+ * Copyright (c) 2011-present Stuart Herbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,25 +34,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib
+ * @subpackage  TasksLib2
  * @author      Stuart Herbert <stuart@stuartherbert.com>
- * @copyright   2011 Stuart Herbert
+ * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib;
+namespace Phix_Project\TasksLib2;
 
+use PHPUnit_Framework_TestCase;
 use Phix_Project\ExceptionsLib\E5xx_InternalServerErrorException;
 
-class E5xx_TaskFailedExceptionTest extends \PHPUnit_Framework_TestCase
+class E5xx_TaskFailedExceptionTest extends PHPUnit_Framework_TestCase
 {
         public function testCanThrowAsException()
         {
                 // setup
                 $caughtException = false;
-                
+
                 // action
                 try
                 {
@@ -62,17 +63,17 @@ class E5xx_TaskFailedExceptionTest extends \PHPUnit_Framework_TestCase
                 {
                         $caughtException = true;
                 }
-                
+
                 // check the results
                 $this->assertTrue($caughtException);
         }
-        
+
         public function testThrownExceptionHasErrorCode500()
         {
                 // setup
                 $caughtException = false;
                 $caughtCode      = 0;
-                
+
                 // action
                 try
                 {
@@ -83,17 +84,17 @@ class E5xx_TaskFailedExceptionTest extends \PHPUnit_Framework_TestCase
                         $caughtException = true;
                         $caughtCode      = $e->getCode();
                 }
-                
+
                 // check the results
-                $this->assertTrue($caughtException);     
+                $this->assertTrue($caughtException);
                 $this->assertEquals(500, $caughtCode);
         }
-        
+
         public function testIsAnInternalServerErrorException()
         {
                 // setup
                 $caughtException = false;
-                
+
                 // action
                 try
                 {
@@ -106,18 +107,18 @@ class E5xx_TaskFailedExceptionTest extends \PHPUnit_Framework_TestCase
                                 $caughtException = true;
                         }
                 }
-                
+
                 // check the results
-                $this->assertTrue($caughtException);     
+                $this->assertTrue($caughtException);
         }
-        
+
         public function testExceptionIncludesMessage()
         {
                 // setup
                 $caughtException = false;
                 $caughtMessage   = null;
                 $expectedMessage = "Task 'mkdir' failed: permission denied";
-                
+
                 // action
                 try
                 {
@@ -128,13 +129,13 @@ class E5xx_TaskFailedExceptionTest extends \PHPUnit_Framework_TestCase
                         $caughtException = true;
                         $caughtMessage   = $e->getMessage();
                 }
-                
+
                 // check the results
                 $this->assertTrue($caughtException);
                 $parts = explode(': ', $caughtMessage);
                 array_shift($parts);
                 $retrievedMessage = implode(': ', $parts);
                 $this->assertEquals($expectedMessage, $retrievedMessage);
-                
+
         }
 }

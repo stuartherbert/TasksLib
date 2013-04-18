@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2011 Stuart Herbert.
+ * Copyright (c) 2011-present Stuart Herbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,32 +34,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package     Phix_Project
- * @subpackage  TasksLib
+ * @subpackage  TasksLib2
  * @author      Stuart Herbert <stuart@stuartherbert.com>
- * @copyright   2011 Stuart Herbert
+ * @copyright   2011-present Stuart Herbert
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
  */
 
-namespace Phix_Project\TasksLib;
+namespace Phix_Project\TasksLib2;
 
 class Files_MkdirTask extends TaskBase
 {
         protected $targetFolder = null;
         protected $umask = 0755;
-        
+
         public function initWithFolder($folder)
         {
                 $this->targetFolder = $folder;
         }
-        
+
         public function initWithFolderAndUmask($folder, $umask)
         {
                 $this->targetFolder = $folder;
                 $this->umask = $umask;
         }
-        
+
         public function requireInitialisedTask()
         {
                 if ($this->targetFolder == null)
@@ -67,19 +67,19 @@ class Files_MkdirTask extends TaskBase
                         throw new E5xx_TaskNotInitialisedException(__CLASS__);
                 }
         }
-        
+
         protected function performTask()
         {
                 // create the folder
                 \mkdir ($this->targetFolder, $this->umask, true);
         }
-        
+
         public function requireSuccessfulTask()
         {
                 // it is difficult to imagine the circumstances in which
                 // mkdir() does not throw an error, and also fails to
                 // create the folder we want
-                
+
                 if (!\is_dir($this->targetFolder))
                 {
                         // @codeCoverageIgnoreStart

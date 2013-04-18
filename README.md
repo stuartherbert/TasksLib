@@ -1,7 +1,7 @@
-TasksLib
-==============
+TasksLib2
+=========
 
-**TasksLib** is a simple-to-use PHP component that provides a collection of classes that automate common repetitive tasks.  It was originally created to stop individual Phix commands duplicating code, but it's generic enough to be useful to a wider range of projects.
+**TasksLib2** is a simple-to-use PHP component that provides a collection of classes that automate common repetitive tasks.  It was originally created to stop individual Phix commands duplicating code, but it's generic enough to be useful to a wider range of projects.
 
 System-Wide Installation
 ------------------------
@@ -9,21 +9,21 @@ System-Wide Installation
 TasksLib should be installed using the [PEAR Installer](http://pear.php.net). This installer is the PHP community's de-facto standard for installing PHP components.
 
     sudo pear channel-discover pear.phix-project.org
-    sudo pear install --alldeps phix/TasksLib
+    sudo pear install --alldeps phix/TasksLib2
 
 As A Dependency On Your Component
 ---------------------------------
 
-If you are creating a component that relies on TasksLib, please make sure that you add TasksLib to your component's package.xml file:
+If you are creating a component that relies on TasksLib2, please make sure that you add TasksLib2 to your component's package.xml file:
 
 ```xml
 <dependencies>
   <required>
     <package>
-      <name>TasksLib</name>
+      <name>TasksLib2</name>
       <channel>pear.phix-project.org</channel>
-      <min>1.0.0</min>
-      <max>1.999.9999</max>
+      <min>2.0.0</min>
+      <max>2.999.9999</max>
     </package>
   </required>
 </dependencies>
