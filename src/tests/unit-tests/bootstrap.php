@@ -80,3 +80,5 @@ Autoloader_Path::searchFirst(PHIX_TESTDIR);
 
 // search inside our src/php/ folder
 PHIX_USING_COMPOSER || Autoloader_Path::searchFirst(PHIX_SRCDIR);
+
+var_dump(get_include_path());
