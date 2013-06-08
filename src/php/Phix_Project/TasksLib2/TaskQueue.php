@@ -45,7 +45,7 @@
 namespace Phix_Project\TasksLib2;
 
 use SplQueue;
-use Phix_Project\ExceptionsLib\Legacy_ErrorHandler;
+use Phix_Project\ExceptionsLib1\Legacy_ErrorHandler;
 
 class TaskQueue extends SplQueue
 {
