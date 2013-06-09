@@ -1,5 +1,5 @@
 {
-	"name": "phix/taskslib2",
+	"name": "phix/taskslib",
 	"description": "TasksLib is a library of classes for automating repetitive tasks",
 	"homepage": "https://github.com/stuartherbert/TasksLib/",
 	"license": "BSD-3-Clause",
@@ -16,10 +16,10 @@
 		"source": "https://github.com/stuartherbert/TasksLib/"
 	},
 	"require": {
-		"phix/exceptionslib1": "1.*"
+		"phix/exceptionslib": "1.*"
 	},
 	"require-dev": {
-		"phix/autoloader4": "4.*"
+		"phix/autoloader": "4.*"
 	},
 	"autoload": {
 		"psr-0": { "" : "src/php/" }

@@ -45,7 +45,7 @@
 namespace Phix_Project\TasksLib2;
 
 use PHPUnit_Framework_TestCase;
-use Phix_Project\ExceptionsLib\E5xx_InternalServerErrorException;
+use Phix_Project\ExceptionsLib1\E5xx_InternalServerErrorException;
 
 class E5xx_NotAValidTaskExceptionTest extends PHPUnit_Framework_TestCase
 {
